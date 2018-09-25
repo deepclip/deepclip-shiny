@@ -1,0 +1,1 @@
+SQLITE_PATH <- "/tmp/deepclip.db"
