@@ -22,7 +22,7 @@ shinyUI(tagList(
   navbarPage(windowTitle="DeepCLIP", HTML("<a href=\"/\">DeepCLIP</a>"), fluid=FALSE, inverse=FALSE, footer=makeFooter(), theme=shinytheme("yeti"),
     tabPanel("DeepCLIP",
       textOutput("jobStatusText"),
-      conditionalPanel("output.jobID == 'NULL'",
+      conditionalPanel("output.jobID == null",
         div(class="page-header", h1("Train network")),
         div(class="panel panel-primary",
           div(class="panel-heading", h3(class="panel-title", "Binding sequences")),
@@ -84,7 +84,19 @@ shinyUI(tagList(
         )
       ),
       conditionalPanel("output.jobStatus == 1",
-        h1("Evaluate model")
+        h1("Evaluate model"),
+        tabsetPanel(
+          tabPanel("Summary",
+            p("This panel should contains a summary of the trained model."),
+            h2("Test performance"),
+            plotOutput("testROCPlot", width=400, height=400),
+            h2("Convolutional logos"),
+            plotOutput("testPFMLogos", width=800, height=800)
+          ),
+          tabPanel("Prediction",
+            p("This panel is for predicting on new sequences.")
+          )
+        )
       ),
       conditionalPanel("output.jobStatus == 2",
         div(class="alert alert-danger", "Model training failed"),

@@ -44,7 +44,8 @@ shinyServer(function(input, output, session) {
   
   jobID <- reactive({
     query <- parseQueryString(session$clientData$url_search)
-    as.character(query["jobid"])
+    req(query[["jobid"]])
+    as.character(query[["jobid"]])
   })
   output$jobID <- reactive(jobID())
   outputOptions(output, "jobID", suspendWhenHidden=FALSE)
@@ -62,7 +63,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$jobLog <- renderText({
-    jobid <- req(jobID())
+    jobid <- jobID()
     status <- jobStatus()
     if(status == 0) autoInvalidate()
     
@@ -73,6 +74,49 @@ shinyServer(function(input, output, session) {
     error.data <- readChar(error.path, file.info(error.path)$size)
     
     paste0(error.data, "\n\n", log.data)
+  })
+  
+  output$testROCPlot <- renderPlot(res=120, {
+    jobid <- jobID()
+    test.path <- getTestOutputPath(jobid)
+    
+    data <- jsonlite::read_json(test.path)
+    roc <- data.frame(
+      fpr = sapply(data$data, "[[", 1),
+      tpr = sapply(data$data, "[[", 2)
+    )
+    
+    library(ggplot2)
+    ggplot(roc, aes(fpr, tpr)) +
+      geom_step() +
+      labs(x="False positive rate", y="True positive rate") +
+      geom_abline(intercept=0, slope=1, linetype="dashed", color="#404040") +
+      theme_bw()
+  })
+  
+  output$testPFMLogos <- renderPlot(res=100, {
+    jobid <- jobID()
+    pfm.path <- getPFMPath(jobid)
+    
+    data <- jsonlite::read_json(pfm.path)
+    
+    library(ggplot2)
+    library(ggseqlogo)
+    
+    logos <- lapply(data[["logos"]], function(logo) {
+      weights <- lapply(logo[["pfm"]], unlist)
+      weights <- do.call(rbind, weights)
+      rownames(weights) <- c("A","C","G","U")
+      t <- sprintf("Filter: %d, %d. Score: %.2f (%.1f%%).", logo[["size"]], logo[["filter"]], logo[["points"]], logo[["points_pct"]]*100)
+      ggseqlogo(weights, method="prob") +
+        ggtitle(t) +
+        theme(
+          plot.margin = margin(3,0,3,0, unit="pt"),
+          axis.title.x = element_blank()
+        )
+    })
+    
+    cowplot::plot_grid(plotlist=logos, ncol=1)
   })
   
   observeEvent(input$trainButton, {
