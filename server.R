@@ -79,7 +79,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$testROCPlot <- renderPlot(res=120, {
-    jobid <- jobID()
+    jobid <- req(jobID())
     test.path <- getTestOutputPath(jobid)
     
     data <- jsonlite::read_json(test.path)
@@ -97,7 +97,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$testPFMLogos <- renderPlot(res=100, {
-    jobid <- jobID()
+    jobid <- req(jobID())
     pfm.path <- getPFMPath(jobid)
     
     data <- jsonlite::read_json(pfm.path)
@@ -124,23 +124,21 @@ shinyServer(function(input, output, session) {
         axis.text.y = element_blank(),
         strip.text.y = element_text(angle=180, size=12)
       )
+  })
+  
+  output$testPredDistPlot <- renderPlot(res=100, {
+    jobid <- req(jobID())
+    test_pred.path <- getTestPredictionsPath(jobid)
     
-    #max.len <- max(sapply(data$logos, function(x) length(x$pfm[[1]])))
-    #logos <- lapply(data[["logos"]], function(logo) {
-    #  weights <- lapply(logo[["pfm"]], unlist)
-    #  weights <- do.call(rbind, weights)
-    #  rownames(weights) <- c("A","C","G","U")
-    #  t <- sprintf("Filter: %d, %d. Score: %.2f (%.1f%%).", logo[["size"]], logo[["filter"]], logo[["points"]], logo[["points_pct"]]*100)
-    #  ggseqlogo(weights, method="prob") +
-    #    scale_x_continuous(limits=c(NA, max.len+0.5), breaks=seq(1, ncol(weights))) +
-    #    ggtitle(t) +
-    #    theme(
-    #      plot.margin = margin(3,0,3,0, unit="pt"),
-    #      axis.title.x = element_blank()
-    #    )
-    #})
+    preds <- read.table(test_pred.path, header=TRUE, sep="\t")
+    preds$class <- ifelse(preds$class == 0, "background", "bound")
     
-    #cowplot::plot_grid(plotlist=logos, ncol=1)
+    library(ggplot2)
+    ggplot(preds, aes(score)) +
+      geom_density(aes(fill=class), alpha=0.5) +
+      scale_x_continuous(limits=c(0,1)) +
+      theme_bw() +
+      labs(x="Score", y="Density", fill="")
   })
   
   output$predictionTable <- renderDataTable(req(currentPredictions()))
@@ -158,6 +156,7 @@ shinyServer(function(input, output, session) {
     predict_fn.path <- getPredictFunctionPath(jobid)
     test_output.path <- getTestOutputPath(jobid)
     predict_pfm.path <- getPFMPath(jobid)
+    test_pred.path <- getTestPredictionsPath(jobid)
     log_stdout.path <- getJobLogPath(jobid)
     log_stderr.path <- getJobErrorPath(jobid)
     
@@ -168,6 +167,7 @@ shinyServer(function(input, output, session) {
       "--sequences", tmpSeqFile,
       "--predict_function_file", predict_fn.path,
       "--test_output_file", test_output.path,
+      "--test_predictions_file", test_pred.path,
       "--predict_PFM_file", predict_pfm.path,
       if(input$seqFormat == "bed") {
         c(

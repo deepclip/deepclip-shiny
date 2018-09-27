@@ -6,6 +6,10 @@ getTestOutputPath <- function(jobid) {
   paste0(RESULTS_PATH, "/test_", jobid, ".json")
 }
 
+getTestPredictionsPath <- function(jobid) {
+  paste0(RESULTS_PATH, "/test_pred_", jobid, ".tsv")
+}
+
 getPFMPath <- function(jobid) {
   paste0(RESULTS_PATH, "/pfm_", jobid, ".json")
 }

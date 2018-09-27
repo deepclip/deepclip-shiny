@@ -1,7 +1,5 @@
 library(shiny)
 library(shinyjs)
-library(shinythemes)
-library(shinydashboard)
 
 redirectJobHandlerCode <- "Shiny.addCustomMessageHandler('redirectJob', function(jobid) { window.location='?jobid='+jobid; });"
 
@@ -26,7 +24,7 @@ shinyUI(tagList(
     tags$link(rel="stylesheet", type="text/css", href="css/style.css")
   ),
   useShinyjs(),
-  navbarPage(windowTitle="DeepCLIP", HTML("<a href=\"/\">DeepCLIP</a>"), fluid=FALSE, inverse=FALSE, footer=makeFooter(), theme=shinytheme("yeti"),
+  navbarPage(windowTitle="DeepCLIP", HTML("<a href=\"/\">DeepCLIP</a>"), fluid=FALSE, inverse=TRUE, footer=makeFooter(),
     tabPanel("DeepCLIP",
       textOutput("jobStatusText"),
       conditionalPanel("output.jobID == null",
@@ -85,8 +83,16 @@ shinyUI(tagList(
         h1("Evaluate model"),
         tabsetPanel(
           tabPanel("Summary",
-            h2("ROC curve"),
-            plotOutput("testROCPlot", width=400, height=400),
+            fluidRow(
+              column(width=6,
+                h2("ROC curve"),
+                plotOutput("testROCPlot", width=400, height=400)
+              ),
+              column(width=6,
+                h2("Prediction score distribution"),
+                plotOutput("testPredDistPlot")
+              )
+            ),
             h2("CNN filters ranked by score"),
             plotOutput("testPFMLogos", width=800, height=800)
           ),
