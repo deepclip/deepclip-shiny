@@ -40,6 +40,8 @@ copyTempFile <- function(path, name) {
 }
 
 shinyServer(function(input, output, session) {
+  currentPredictions <- reactiveVal()
+  
   autoInvalidate <- reactiveTimer(10000)
   
   jobID <- reactive({
@@ -103,21 +105,45 @@ shinyServer(function(input, output, session) {
     library(ggplot2)
     library(ggseqlogo)
     
+    scores <- sapply(data[["logos"]], "[[", "points")
     logos <- lapply(data[["logos"]], function(logo) {
       weights <- lapply(logo[["pfm"]], unlist)
       weights <- do.call(rbind, weights)
       rownames(weights) <- c("A","C","G","U")
-      t <- sprintf("Filter: %d, %d. Score: %.2f (%.1f%%).", logo[["size"]], logo[["filter"]], logo[["points"]], logo[["points_pct"]]*100)
-      ggseqlogo(weights, method="prob") +
-        ggtitle(t) +
-        theme(
-          plot.margin = margin(3,0,3,0, unit="pt"),
-          axis.title.x = element_blank()
-        )
+      weights
     })
+    names(logos) <- formatC(scores)
+    logos <- logos[order(scores, decreasing=TRUE)]
     
-    cowplot::plot_grid(plotlist=logos, ncol=1)
+    ggplot() +
+      geom_logo(logos, method="prob") +
+      facet_grid(seq_group ~ ., switch="y") +
+      theme_logo() +
+      theme(
+        axis.title = element_blank(),
+        axis.text.y = element_blank(),
+        strip.text.y = element_text(angle=180, size=12)
+      )
+    
+    #max.len <- max(sapply(data$logos, function(x) length(x$pfm[[1]])))
+    #logos <- lapply(data[["logos"]], function(logo) {
+    #  weights <- lapply(logo[["pfm"]], unlist)
+    #  weights <- do.call(rbind, weights)
+    #  rownames(weights) <- c("A","C","G","U")
+    #  t <- sprintf("Filter: %d, %d. Score: %.2f (%.1f%%).", logo[["size"]], logo[["filter"]], logo[["points"]], logo[["points_pct"]]*100)
+    #  ggseqlogo(weights, method="prob") +
+    #    scale_x_continuous(limits=c(NA, max.len+0.5), breaks=seq(1, ncol(weights))) +
+    #    ggtitle(t) +
+    #    theme(
+    #      plot.margin = margin(3,0,3,0, unit="pt"),
+    #      axis.title.x = element_blank()
+    #    )
+    #})
+    
+    #cowplot::plot_grid(plotlist=logos, ncol=1)
   })
+  
+  output$predictionTable <- renderDataTable(req(currentPredictions()))
   
   observeEvent(input$trainButton, {
     if(!isTruthy(input$seqFile)) {
@@ -173,5 +199,58 @@ shinyServer(function(input, output, session) {
       file.remove(tmpSeqFile, tmpBkgFile)
     }, detached=TRUE)
     session$sendCustomMessage("redirectJob", as.character(jobid))
+  })
+  
+  observeEvent(input$predictButton, {
+    if(!isTruthy(input$predictSeq) && input$predictSeqText == "") {
+      alert("Please provide a sequence file or paste your sequences in the text area.")
+      return()
+    }
+    
+    seqfile1 <- tempfile(fileext=".fa")
+    if(input$predictSeqText != "") {
+      write(input$predictSeqText, file=seqfile1)
+    } else {
+      file.copy(input$predictSeq$datapath, seqfile1)
+    }
+    
+    jobid <- jobID()
+    output.path <- tempfile(fileext=".json")
+    predict_fn.path <- getPredictFunctionPath(jobid)
+    
+    args <- c(
+      paste0(CODE_PATH, "/DeepCLIP.py"),
+      "--runmode", "predict",
+      "--predict_function_file", predict_fn.path,
+      "--sequences", seqfile1,
+      "--predict_mode", "single",
+      "--predict_output_file", output.path
+    )
+    
+    message(args)
+    
+    withProgress({
+      status <- system2(
+        PYTHON_PATH, args, wait=TRUE,
+        env=c("OMP_NUM_THREADS=4", "THEANO_FLAGS=openmp=True")
+      )
+    })
+    
+    file.remove(seqfile1)
+    
+    if(status != 0) {
+      alert("Prediction failed.")
+      return()
+    }
+    
+    data <- jsonlite::read_json(output.path)
+    
+    out <- data.frame(
+      id = sapply(data$predictions, "[[", "id"),
+      seq = sapply(data$predictions, "[[", "sequence"),
+      score = sapply(data$predictions, "[[", "score")
+    )
+    
+    currentPredictions(out)
   })
 })
