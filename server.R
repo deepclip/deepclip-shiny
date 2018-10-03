@@ -7,11 +7,15 @@ source("files.R")
 
 createJob <- function() {
   db <- dbConnect(SQLite(), SQLITE_PATH)
-  dbExecute(db, "INSERT INTO jobs (token, status) VALUES ('', 0)")
+  
+  query <- sqlInterpolate(db, "INSERT INTO jobs (token, status) VALUES ('', ?status)", status=JOB_STATUS_ACTIVE)
+  dbExecute(db, query)
+  
   jobid <- as.numeric(dbGetQuery(db, "SELECT last_insert_rowid()"))
   token <- paste0(jobid, paste0(sample(c(letters, 0:9), 32), collapse=""))
   query <- sqlInterpolate(db, "UPDATE jobs SET token = ?token WHERE id = ?id ;", token=token, id=jobid)
   dbExecute(db, query)
+  
   dbDisconnect(db)
   token
 }
@@ -54,20 +58,20 @@ shinyServer(function(input, output, session) {
   
   jobStatus <- reactive({
     status <- req(getJobStatus(jobID()))
-    if(status == 0) autoInvalidate()
+    if(status == JOB_STATUS_ACTIVE) autoInvalidate()
     status
   })
   output$jobStatus <- reactive(jobStatus())
   outputOptions(output, "jobStatus", suspendWhenHidden=FALSE)
   
   output$jobStatusText <- renderText({
-    sprintf("Job ID: %s, status: %d", jobID(), jobStatus())
+    sprintf("Job ID: %s, status: %d (%s)", jobID(), jobStatus(), JOB_STATUS_NAMES[as.character(jobStatus())])
   })
   
   output$jobLog <- renderText({
     jobid <- jobID()
     status <- jobStatus()
-    if(status == 0) autoInvalidate()
+    if(status == JOB_STATUS_ACTIVE) autoInvalidate()
     
     log.path <- getJobLogPath(jobid)
     log.data <- readChar(log.path, file.info(log.path)$size)
@@ -193,8 +197,8 @@ shinyServer(function(input, output, session) {
         env=c("OMP_NUM_THREADS=4", "THEANO_FLAGS=openmp=True")
       )
       
-      if(status == 0) updateJobStatus(jobid, 1)
-      else updateJobStatus(jobid, 2)
+      if(status == 0) updateJobStatus(jobid, JOB_STATUS_SUCCESS)
+      else updateJobStatus(jobid, JOB_STATUS_ERROR)
       
       file.remove(tmpSeqFile, tmpBkgFile)
     }, detached=TRUE)
