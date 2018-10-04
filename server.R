@@ -1,8 +1,10 @@
 library(shiny)
 library(shinyjs)
+library(DT)
 library(DBI)
 library(RSQLite)
 
+source("theme.R")
 source("files.R")
 
 createJob <- function() {
@@ -97,7 +99,7 @@ shinyServer(function(input, output, session) {
       geom_step() +
       labs(x="False positive rate", y="True positive rate") +
       geom_abline(intercept=0, slope=1, linetype="dashed", color="#404040") +
-      theme_bw()
+      mytheme()
   })
   
   output$testPFMLogos <- renderPlot(res=100, {
@@ -141,11 +143,43 @@ shinyServer(function(input, output, session) {
     ggplot(preds, aes(score)) +
       geom_density(aes(fill=class), alpha=0.5) +
       scale_x_continuous(limits=c(0,1)) +
-      theme_bw() +
+      mytheme() +
       labs(x="Score", y="Density", fill="")
   })
   
-  output$predictionTable <- renderDataTable(req(currentPredictions()))
+  output$predictionProfilePlot <- renderPlot(res=100, {
+    validate(need(input$predictionTable_rows_selected, "Select a row in the table below to show the binding profile."))
+    rowid <- req(input$predictionTable_rows_selected)
+    preds <- req(currentPredictions())
+    
+    weights <- unlist(preds[[rowid]]$weights)
+    tbl <- data.frame(pos=seq_along(weights), weight=weights)
+    seq <- strsplit(toupper(preds[[rowid]]$sequence), "")[[1]]
+    
+    ggplot(tbl, aes(pos, weight)) +
+      geom_line() +
+      scale_x_continuous(breaks=seq(1, length(weights)), labels=seq) +
+      mytheme() +
+      theme(
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size=11)
+      ) + labs(y="score")
+  })
+  
+  output$predictionTable <- renderDT(server=FALSE, {
+    preds <- req(currentPredictions())
+    tbl <- data.frame(
+      id = sapply(preds, "[[", "id"),
+      seq = sapply(preds, "[[", "sequence"),
+      score = sapply(preds, "[[", "score")
+    )
+    datatable(
+      req(tbl),
+      rownames = FALSE,
+      selection = "single",
+      options = list(pageLength = 10, select="single")
+    )
+  })
   
   observeEvent(input$trainButton, {
     if(!isTruthy(input$seqFile)) {
@@ -211,50 +245,46 @@ shinyServer(function(input, output, session) {
       return()
     }
     
-    seqfile1 <- tempfile(fileext=".fa")
-    if(input$predictSeqText != "") {
-      write(input$predictSeqText, file=seqfile1)
-    } else {
-      file.copy(input$predictSeq$datapath, seqfile1)
-    }
-    
-    jobid <- jobID()
-    output.path <- tempfile(fileext=".json")
-    predict_fn.path <- getPredictFunctionPath(jobid)
-    
-    args <- c(
-      paste0(CODE_PATH, "/DeepCLIP.py"),
-      "--runmode", "predict",
-      "--predict_function_file", predict_fn.path,
-      "--sequences", seqfile1,
-      "--predict_mode", "single",
-      "--predict_output_file", output.path
-    )
-    
-    message(args)
-    
     withProgress({
+      setProgress(value=0.1, message="Preparing data")
+      
+      seqfile1 <- tempfile(fileext=".fa")
+      if(input$predictSeqText != "") {
+        write(input$predictSeqText, file=seqfile1)
+      } else {
+        file.copy(input$predictSeq$datapath, seqfile1)
+      }
+      
+      jobid <- jobID()
+      output.path <- tempfile(fileext=".json")
+      predict_fn.path <- getPredictFunctionPath(jobid)
+      
+      args <- c(
+        paste0(CODE_PATH, "/DeepCLIP.py"),
+        "--runmode", "predict",
+        "--predict_function_file", predict_fn.path,
+        "--sequences", seqfile1,
+        "--predict_mode", "single",
+        "--predict_output_file", output.path
+      )
+    
+      setProgress(value=0.2, message="Computing predictions")
       status <- system2(
         PYTHON_PATH, args, wait=TRUE,
         env=c("OMP_NUM_THREADS=4", "THEANO_FLAGS=openmp=True")
       )
+    
+      setProgress(value=0.9, message="Finishing up")
+      file.remove(seqfile1)
+      
+      if(status != 0) {
+        alert("Prediction failed.")
+        return()
+      }
+      
+      data <- jsonlite::read_json(output.path)
+      
+      currentPredictions(data$predictions)
     })
-    
-    file.remove(seqfile1)
-    
-    if(status != 0) {
-      alert("Prediction failed.")
-      return()
-    }
-    
-    data <- jsonlite::read_json(output.path)
-    
-    out <- data.frame(
-      id = sapply(data$predictions, "[[", "id"),
-      seq = sapply(data$predictions, "[[", "sequence"),
-      score = sapply(data$predictions, "[[", "score")
-    )
-    
-    currentPredictions(out)
   })
 })

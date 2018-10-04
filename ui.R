@@ -1,5 +1,6 @@
 library(shiny)
 library(shinyjs)
+library(DT)
 
 redirectJobHandlerCode <- "Shiny.addCustomMessageHandler('redirectJob', function(jobid) { window.location='?jobid='+jobid; });"
 
@@ -80,7 +81,6 @@ shinyUI(tagList(
         )
       ),
       conditionalPanel("output.jobStatus == 1",
-        h1("Evaluate model"),
         tabsetPanel(
           tabPanel("Summary",
             fluidRow(
@@ -113,7 +113,8 @@ shinyUI(tagList(
             ),
             actionButton("predictButton", "Run prediction", class="btn-lg btn-primary"),
             h3("Predictions"),
-            dataTableOutput("predictionTable")
+            plotOutput("predictionProfilePlot", height=300),
+            DTOutput("predictionTable")
           )
         )
       ),
