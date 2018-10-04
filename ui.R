@@ -22,9 +22,11 @@ makeTitledPanel <- function(title, ...) {
 shinyUI(tagList(
   tags$head(
     tags$script(type="text/javascript", redirectJobHandlerCode),
-    tags$link(rel="stylesheet", type="text/css", href="css/style.css")
+    tags$link(rel="stylesheet", type="text/css", href="css/style.css"),
+    tags$link(rel="stylesheet", type="text/css", href="css/loader.css")
   ),
   useShinyjs(),
+  div(id="loading-content", h2("Loading..."), div(class="loader", "Loading")),
   navbarPage(windowTitle="DeepCLIP", HTML("<a href=\"/\">DeepCLIP</a>"), fluid=FALSE, inverse=TRUE, footer=makeFooter(),
     tabPanel("DeepCLIP",
       textOutput("jobStatusText"),

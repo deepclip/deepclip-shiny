@@ -287,4 +287,6 @@ shinyServer(function(input, output, session) {
       currentPredictions(data$predictions)
     })
   })
+  
+  hide(id="loading-content", anim=TRUE, animType="fade")
 })

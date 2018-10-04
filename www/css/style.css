@@ -2,6 +2,18 @@
   max-height:500px;
 }
 
+#loading-content {
+  position: fixed;
+  background: #000000;
+  opacity: 0.9;
+  z-index: 9999;
+  left: 0;
+  right: 0;
+  height: 100%;
+  text-align: center;
+  color: #FFFFFF;
+}
+
 .progress {
   height: 16px;
   margin-bottom: 15px;
