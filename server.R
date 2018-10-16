@@ -151,19 +151,46 @@ shinyServer(function(input, output, session) {
     validate(need(input$predictionTable_rows_selected, "Select a row in the table below to show the binding profile."))
     rowid <- req(input$predictionTable_rows_selected)
     preds <- req(currentPredictions())
+    x <- preds[[rowid]]
     
-    weights <- unlist(preds[[rowid]]$weights)
-    tbl <- data.frame(pos=seq_along(weights), weight=weights)
-    seq <- strsplit(toupper(preds[[rowid]]$sequence), "")[[1]]
-    
-    ggplot(tbl, aes(pos, weight)) +
-      geom_line() +
-      scale_x_continuous(breaks=seq(1, length(weights)), labels=seq) +
-      mytheme() +
-      theme(
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size=11)
-      ) + labs(y="score")
+    if(is.null(x[["variant_sequence"]])) {
+      weights <- unlist(x$weights)
+      seq <- strsplit(toupper(x$sequence), "")[[1]]
+      tbl <- data.frame(pos=seq_along(weights), weight=weights)
+      
+      ggplot(tbl, aes(pos, weight)) +
+        geom_line() +
+        scale_x_continuous(breaks=seq(1, length(weights)), labels=seq) +
+        mytheme() +
+        theme(
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(size=11)
+        ) + labs(y="DeepCLIP score")
+    } else {
+      weights1 <- unlist(x$weights)
+      weights2 <- unlist(x$variant_weights)
+      seq1 <- strsplit(toupper(x$sequence), "")[[1]]
+      seq2 <- strsplit(toupper(x$variant_sequence), "")[[1]]
+      
+      tbl <- data.frame(
+        pos = c(seq_along(seq1), seq_along(seq2)),
+        weight = c(weights1, weights2),
+        group = factor(c(rep("reference", length(seq1)), rep("variant", length(seq2))), levels=c("reference","variant"))
+      )
+      
+      xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
+      
+      ggplot(tbl, aes(pos, weight)) +
+        geom_line(aes(color=group)) +
+        scale_x_continuous(breaks=seq(1, max(tbl$pos)), labels=xlabels) +
+        scale_color_manual(values=c("black", "red")) +
+        mytheme() +
+        theme(
+          legend.title = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(size=11)
+        ) + labs(y="DeepCLIP score")
+    }
   })
   
   output$predictionTable <- renderDT(server=FALSE, {
@@ -176,7 +203,7 @@ shinyServer(function(input, output, session) {
     datatable(
       req(tbl),
       rownames = FALSE,
-      selection = "single",
+      selection = list(mode="single", selected=1),
       options = list(pageLength = 10, select="single")
     )
   })
@@ -249,10 +276,20 @@ shinyServer(function(input, output, session) {
       setProgress(value=0.1, message="Preparing data")
       
       seqfile1 <- tempfile(fileext=".fa")
+      seqfile2 <- tempfile(fileext=".fa")
       if(input$predictSeqText != "") {
         write(input$predictSeqText, file=seqfile1)
       } else {
         file.copy(input$predictSeq$datapath, seqfile1)
+      }
+      has_variants <- FALSE
+      if(input$predictSeqText2 != "") {
+        write(input$predictSeqText2, file=seqfile2)
+        has_variants <- TRUE
+      }
+      else if(isTruthy(input$predictSeq2)) {
+        file.copy(input$predictSeq2$datapath, seqfile2)
+        has_variants <- TRUE
       }
       
       jobid <- jobID()
@@ -264,6 +301,7 @@ shinyServer(function(input, output, session) {
         "--runmode", "predict",
         "--predict_function_file", predict_fn.path,
         "--sequences", seqfile1,
+        if(has_variants) c("--variant_sequences", seqfile2),
         "--predict_mode", "single",
         "--predict_output_file", output.path
       )
@@ -275,7 +313,7 @@ shinyServer(function(input, output, session) {
       )
     
       setProgress(value=0.9, message="Finishing up")
-      file.remove(seqfile1)
+      file.remove(seqfile1, seqfile2)
       
       if(status != 0) {
         alert("Prediction failed.")
