@@ -31,13 +31,22 @@ shinyUI(tagList(
     tabPanel("DeepCLIP",
       textOutput("jobStatusText"),
       conditionalPanel("output.jobID == null",
-        div(class="page-header", h1("Train network")),
+        div(class="page-header", h1("Use pre-trained network")),
+        makeTitledPanel("Pre-trained networks",
+          fluidRow(
+            column(width=4, selectInput("pretrainedModel", NULL, PRETRAINED_MODELS, width="100%")),
+            column(width=4, actionButton("usePretrainedButton", "Use pretrained model", class="btn-primary"))
+          )
+        ),
+        div(class="page-header", h1("Train new network")),
         makeTitledPanel("Binding sequences",
           p("Select how binding sequences will be provided. If BED file is selected, a target species and assembly must be selected as well."),
           fluidRow(
             column(width=4, selectInput("seqFormat", "File format", c("FASTA file"="fasta", "BED file"="bed"))),
-            column(width=4, selectInput("seqAssembly", "Assembly", c("Human (GRCh38/hg38)"="hg38", "Human (GRCh37/hg19)"="hg19", "Mouse (GRCm38/mm10)"="mm10"))),
-            column(width=4, fileInput("seqFile", "Sequence file"))
+            column(width=4, fileInput("seqFile", "Sequence file")),
+            conditionalPanel("input.seqFormat == 'bed'",
+              column(width=4, selectInput("seqAssembly", "Assembly", c("Human (GRCh38/hg38)"="hg38", "Human (GRCh37/hg19)"="hg19", "Mouse (GRCm38/mm10)"="mm10")))
+            )
           )
         ),
         makeTitledPanel("Background sequences",

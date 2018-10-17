@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mkdir -p /srv/deepclip/code /srv/deepclip/data /srv/deepclip/networks /srv/deepclip/results
+mkdir -p /srv/deepclip/code /srv/deepclip/data /srv/deepclip/results
 
 sqlite3 /srv/deepclip/deepclip.db "CREATE TABLE jobs (id INTEGER PRIMARY KEY, token TEXT, status INTEGER);"
 

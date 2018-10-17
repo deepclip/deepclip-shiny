@@ -86,6 +86,7 @@ shinyServer(function(input, output, session) {
   
   output$testROCPlot <- renderPlot(res=120, {
     jobid <- req(jobID())
+    validate(need(jobStatus() == JOB_STATUS_SUCCESS, "Job not completed"))
     test.path <- getTestOutputPath(jobid)
     
     data <- jsonlite::read_json(test.path)
@@ -104,6 +105,7 @@ shinyServer(function(input, output, session) {
   
   output$testPFMLogos <- renderPlot(res=100, {
     jobid <- req(jobID())
+    validate(need(jobStatus() == JOB_STATUS_SUCCESS, "Job not completed"))
     pfm.path <- getPFMPath(jobid)
     
     data <- jsonlite::read_json(pfm.path)
@@ -134,6 +136,7 @@ shinyServer(function(input, output, session) {
   
   output$testPredDistPlot <- renderPlot(res=100, {
     jobid <- req(jobID())
+    validate(need(jobStatus() == JOB_STATUS_SUCCESS, "Job not completed"))
     test_pred.path <- getTestPredictionsPath(jobid)
     
     preds <- read.table(test_pred.path, header=TRUE, sep="\t")
@@ -208,11 +211,24 @@ shinyServer(function(input, output, session) {
     )
   })
   
+  observeEvent(input$usePretrainedButton, {
+    session$sendCustomMessage("redirectJob", input$pretrainedModel)
+  })
+  
   observeEvent(input$trainButton, {
     if(!isTruthy(input$seqFile)) {
       alert("Please select a sequence file and wait for it to upload before submitting.")
       return()
     }
+    if(input$bkgSource == "fasta" && !isTruthy(input$bkgFile)) {
+      alert("Please select a FASTA file containing background sequences and wait for it to upload before submitting.")
+      return()
+    }
+    if(input$bkgSource == "bed" && input$seqFormat != "bed") {
+      alert("Generating background sequences from BED file is only possible when binding sequences are in BED format.")
+      return()
+    }
+    
     tmpSeqFile <- copyTempFile(input$seqFile$datapath, input$seqFile$name)
     tmpBkgFile <- if(isTruthy(input$bkgFile)) copyTempFile(input$bkgFile$datapath, input$bkgFile$name)
     
