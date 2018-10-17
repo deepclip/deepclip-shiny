@@ -254,8 +254,7 @@ shinyServer(function(input, output, session) {
         PYTHON_PATH, args,
         wait=TRUE,
         stdout=log_stdout.path,
-        stderr=log_stderr.path,
-        env=c("OMP_NUM_THREADS=4", "THEANO_FLAGS=openmp=True")
+        stderr=log_stderr.path
       )
       
       if(status == 0) updateJobStatus(jobid, JOB_STATUS_SUCCESS)
@@ -307,10 +306,7 @@ shinyServer(function(input, output, session) {
       )
     
       setProgress(value=0.2, message="Computing predictions")
-      status <- system2(
-        PYTHON_PATH, args, wait=TRUE,
-        env=c("OMP_NUM_THREADS=4", "THEANO_FLAGS=openmp=True")
-      )
+      status <- system2(PYTHON_PATH, args, wait=TRUE)
     
       setProgress(value=0.9, message="Finishing up")
       file.remove(seqfile1, seqfile2)

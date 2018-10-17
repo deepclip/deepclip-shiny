@@ -1,3 +1,5 @@
+options(shiny.sanitize.errors = TRUE)
+
 VERSION <- "0.1"
 
 PYTHON_PATH <- "/usr/bin/python2"
