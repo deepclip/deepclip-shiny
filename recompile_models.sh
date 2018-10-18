@@ -1,8 +1,6 @@
 #!/bin/bash
 
-rm models/predict_fn_*.pkl
-
-for i in models/*.pkl; do
-    echo "Recompiling $i"
-    python2 deepclip/recompile.py "$i" "models/predict_fn_$(basename $i)"
+for i in /srv/deepclip/models/*.pkl; do
+    echo "Recompiling $i into /srv/deepclip/results/predict_fn_$(basename $i)"
+    python2 /srv/deepclip/code/recompile.py "$i" "/srv/deepclip/results/predict_fn_$(basename $i)"
 done
