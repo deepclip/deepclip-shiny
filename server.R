@@ -113,7 +113,10 @@ shinyServer(function(input, output, session) {
     library(ggplot2)
     library(ggseqlogo)
     
-    scores <- sapply(data[["logos"]], "[[", "points")
+    scores <- sapply(data[["logos"]], function(logo) {
+      pfm <- do.call(rbind, lapply(logo[["pfm"]], unlist))
+      sum(colSums(pfm * log2(pfm + 0.000000001)) + log2(4)) / ncol(pfm)
+    })
     logos <- lapply(data[["logos"]], function(logo) {
       weights <- lapply(logo[["pfm"]], unlist)
       weights <- do.call(rbind, weights)
