@@ -206,6 +206,13 @@ shinyServer(function(input, output, session) {
       seq = sapply(preds, "[[", "sequence"),
       score = sapply(preds, "[[", "score")
     )
+    if(!is.null(preds[[1]][["variant_sequence"]])) {
+      tbl <- cbind(tbl, data.frame(
+        variant_id = sapply(preds, "[[", "variant_id"),
+        variant_seq = sapply(preds, "[[", "variant_sequence"),
+        variant_score = sapply(preds, "[[", "variant_score")
+       ))
+    }
     datatable(
       req(tbl),
       rownames = FALSE,
