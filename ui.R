@@ -1,6 +1,7 @@
 library(shiny)
 library(shinyjs)
 library(DT)
+library(shinyWidgets)
 
 redirectJobHandlerCode <- "Shiny.addCustomMessageHandler('redirectJob', function(jobid) { window.location='?jobid='+jobid; });"
 
@@ -35,7 +36,7 @@ shinyUI(tagList(
         makeTitledPanel("Pre-trained networks",
           fluidRow(
             column(width=4, selectInput("pretrainedModel", NULL, PRETRAINED_MODELS, width="100%")),
-            column(width=4, actionButton("usePretrainedButton", "Use pretrained model", class="btn-primary"))
+            column(width=4, actionButton("usePretrainedButton", "Use pre-trained model", class="btn-primary"))
           )
         ),
         div(class="page-header", h1("Train new network")),
@@ -79,7 +80,7 @@ shinyUI(tagList(
             column(width=3, numericInput("bedWidth", "Fixed sequence width", min=1, max=100, value=NA)),
             column(width=3, numericInput("bedPadding", "Pad sequences", min=0, max=20, value=NA))
           ),
-          sliderInput("epochs", "Training time", min=1, max=10, value=5, step=1, post = " epochs")
+          sliderInput("epochs", "Training time", min=1, max=10, value=5, step=1, post = " epochs", width="100%")
         ),
         actionButton("trainButton", "Train network", class="btn-lg btn-primary")
       ),
@@ -112,13 +113,16 @@ shinyUI(tagList(
               column(width=6,
                 makeTitledPanel("Sequences",
                   fileInput("predictSeq", "FASTA file"),
-                  textAreaInput("predictSeqText", "Sequences")
+                  textAreaInput("predictSeqText", "Sequences", width="100%")
                 )
               ),
               column(width=6,
-                makeTitledPanel("Sequences 2",
-                  fileInput("predictSeq2", "FASTA file"),
-                  textAreaInput("predictSeqText2", "Sequences", width="100%")
+                makeTitledPanel("Variant sequences",
+                  materialSwitch("predictPaired", "Predict paired sequences", FALSE, status="primary"),
+                  conditionalPanel("input.predictPaired == true",
+                    fileInput("predictSeq2", "FASTA file"),
+                    textAreaInput("predictSeqText2", "Sequences", width="100%")
+                  )
                 )
               )
             ),

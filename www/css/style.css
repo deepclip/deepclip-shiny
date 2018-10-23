@@ -59,3 +59,13 @@
 .shiny-notification-close {
   display: none;
 }
+
+.shiny-input-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.shiny-input-container:not(.shiny-input-container-inline) {
+  width: 100%;
+  max-width: 100%;
+}

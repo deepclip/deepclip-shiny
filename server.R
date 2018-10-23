@@ -296,6 +296,10 @@ shinyServer(function(input, output, session) {
       alert("Please provide a sequence file or paste your sequences in the text area.")
       return()
     }
+    if(input$predictPaired && !isTruthy(input$predictSeq2) && input$predictSeqText2 == "") {
+      alert("Please provide a variant sequence file or paste your variant sequences in the text area.")
+      return()
+    }
     
     withProgress({
       setProgress(value=0.1, message="Preparing data")
@@ -307,14 +311,13 @@ shinyServer(function(input, output, session) {
       } else {
         file.copy(input$predictSeq$datapath, seqfile1)
       }
-      has_variants <- FALSE
-      if(input$predictSeqText2 != "") {
-        write(input$predictSeqText2, file=seqfile2)
-        has_variants <- TRUE
-      }
-      else if(isTruthy(input$predictSeq2)) {
-        file.copy(input$predictSeq2$datapath, seqfile2)
-        has_variants <- TRUE
+      if(input$predictPaired) {
+        if(input$predictSeqText2 != "") {
+          write(input$predictSeqText2, file=seqfile2)
+        }
+        else if(isTruthy(input$predictSeq2)) {
+          file.copy(input$predictSeq2$datapath, seqfile2)
+        }
       }
       
       jobid <- jobID()
@@ -326,7 +329,7 @@ shinyServer(function(input, output, session) {
         "--runmode", "predict",
         "--predict_function_file", predict_fn.path,
         "--sequences", seqfile1,
-        if(has_variants) c("--variant_sequences", seqfile2),
+        if(input$predictPaired) c("--variant_sequences", seqfile2),
         "--predict_mode", "single",
         "--predict_output_file", output.path
       )
