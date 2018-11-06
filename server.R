@@ -66,6 +66,16 @@ shinyServer(function(input, output, session) {
   output$jobStatus <- reactive(jobStatus())
   outputOptions(output, "jobStatus", suspendWhenHidden=FALSE)
   
+  updateSelectizeInput(session, "pretrainedModel", choices=PRETRAINED_MODELS, server=TRUE,
+    options=list(placeholder="Select or search for a model.", render=I(
+    '{
+      option: function(item, escape) {
+        return "<div><strong>" + escape(item.protein) + ", " + escape(item.method) + "</strong><br>" + escape(item.citation) + "</div>";
+      }
+    }'
+    )
+  ))
+  
   output$jobStatusText <- renderText({
     sprintf("Job ID: %s, status: %d (%s)", jobID(), jobStatus(), JOB_STATUS_NAMES[as.character(jobStatus())])
   })
@@ -84,7 +94,7 @@ shinyServer(function(input, output, session) {
     paste0(error.data, "\n\n", log.data)
   })
   
-  output$testROCPlot <- renderPlot(res=120, {
+  testROCPlot <- function() {
     jobid <- req(jobID())
     validate(need(jobStatus() == JOB_STATUS_SUCCESS, "Job not completed"))
     test.path <- getTestOutputPath(jobid)
@@ -101,9 +111,11 @@ shinyServer(function(input, output, session) {
       labs(x="False positive rate", y="True positive rate") +
       geom_abline(intercept=0, slope=1, linetype="dashed", color="#404040") +
       mytheme()
-  })
+  }
   
-  output$testPFMLogos <- renderPlot(res=100, {
+  output$testROCPlot <- renderPlot(res=120, testROCPlot())
+  
+  testPFMLogos <- function() {
     jobid <- req(jobID())
     validate(need(jobStatus() == JOB_STATUS_SUCCESS, "Job not completed"))
     pfm.path <- getPFMPath(jobid)
@@ -135,9 +147,11 @@ shinyServer(function(input, output, session) {
         axis.text.y = element_blank(),
         strip.text.y = element_text(angle=180, size=12)
       )
-  })
+  }
   
-  output$testPredDistPlot <- renderPlot(res=100, {
+  output$testPFMLogos <- renderPlot(res=100, testPFMLogos())
+  
+  testPredDistPlot <- function() {
     jobid <- req(jobID())
     validate(need(jobStatus() == JOB_STATUS_SUCCESS, "Job not completed"))
     test_pred.path <- getTestPredictionsPath(jobid)
@@ -150,10 +164,33 @@ shinyServer(function(input, output, session) {
       geom_density(aes(fill=class), alpha=0.5) +
       scale_x_continuous(limits=c(0,1)) +
       mytheme() +
+      theme(legend.position = "right") +
       labs(x="Score", y="Density", fill="")
-  })
+  }
   
-  output$predictionProfilePlot <- renderPlot(res=100, {
+  output$testPredDistPlot <- renderPlot(res=100, testPredDistPlot())
+  
+  output$downloadSummaryPlots <- downloadHandler(
+    filename = function() { sprintf("%s.zip", jobID()) },
+    contentType = "application/zip",
+    content = function(file) {
+      p.roc <- testROCPlot()
+      p.pfm <- testPFMLogos()
+      p.dist <- testPredDistPlot()
+      
+      file.roc <- tempfile(pattern="roc", fileext=".pdf")
+      file.pfm <- tempfile(pattern="pfm", fileext=".pdf")
+      file.dist <- tempfile(pattern="scoredist", fileext=".pdf")
+      
+      ggsave(file.roc, p.roc, width=3.7, height=3.7, units="in")
+      ggsave(file.pfm, p.pfm, width=6, height=5, units="in")
+      ggsave(file.dist, p.dist, width=11.4, height=4, units="in")
+      
+      zip(file, c(file.roc, file.pfm, file.dist), extras="-j")
+    }
+  )
+  
+  predictionProfilePlot <- function() {
     validate(need(input$predictionTable_rows_selected, "Select a row in the table below to show the binding profile."))
     rowid <- req(input$predictionTable_rows_selected)
     preds <- req(currentPredictions())
@@ -197,7 +234,16 @@ shinyServer(function(input, output, session) {
           axis.text.x = element_text(size=11)
         ) + labs(y="DeepCLIP score")
     }
-  })
+  }
+  
+  output$predictionProfilePlot <- renderPlot(res=100, predictionProfilePlot())
+  
+  output$downloadPredictionProfilePlot <- downloadHandler(
+    filename = "profile.pdf", contentType="application/pdf", content=function(file) {
+      p <- predictionProfilePlot()
+      ggsave(plot=p, filename=file, width=10, height=3, units="in")
+    }
+  )
   
   output$predictionTable <- renderDT(server=FALSE, {
     preds <- req(currentPredictions())
@@ -217,7 +263,16 @@ shinyServer(function(input, output, session) {
       req(tbl),
       rownames = FALSE,
       selection = list(mode="single", selected=1),
-      options = list(pageLength = 10, select="single")
+      extensions = "Buttons",
+      options = list(
+        pageLength=10,
+        select="single",
+        dom="Bfrtip",
+        buttons=list(
+          list(extend="csv", text="Download CSV", filename="predictions"),
+          list(extend="excel", text="Download Excel", filename="predictions", title=NULL)
+        )
+      )
     )
   })
   
@@ -237,6 +292,28 @@ shinyServer(function(input, output, session) {
     if(input$bkgSource == "bed" && input$seqFormat != "bed") {
       alert("Generating background sequences from BED file is only possible when binding sequences are in BED format.")
       return()
+    }
+    
+    data_split <- c(input$trainSplit, input$valSplit, input$testSplit)
+    if(any(is.na(data_split))) {
+      alert("Please specify the fraction of sequences to use for training, validation and testing.")
+      return()
+    }
+    if(any(data_split <= 0)) {
+      alert("All data split sizes must be greater than 0.")
+      return()
+    }
+    if(sum(data_split) != 100) {
+      alert("Data split sizes must sum to 100%.")
+      return()
+    }
+    random_seed <- NULL
+    if(input$randomSeed != "") {
+      random_seed <- as.integer(input$randomSeed)
+      if(is.na(random_seed)) {
+        alert("Provided random seed is not a valid integer.")
+        return()
+      }
     }
     
     tmpSeqFile <- copyTempFile(input$seqFile$datapath, input$seqFile$name)
@@ -260,6 +337,8 @@ shinyServer(function(input, output, session) {
       "--test_output_file", test_output.path,
       "--test_predictions_file", test_pred.path,
       "--predict_PFM_file", predict_pfm.path,
+      "--data_split", data_split / 100,
+      if(!is.null(random_seed)) c("--random_seed", random_seed),
       if(input$seqFormat == "bed") {
         c(
           "--force_bed",
@@ -330,7 +409,6 @@ shinyServer(function(input, output, session) {
         "--predict_function_file", predict_fn.path,
         "--sequences", seqfile1,
         if(input$predictPaired) c("--variant_sequences", seqfile2),
-        "--predict_mode", "single",
         "--predict_output_file", output.path
       )
     

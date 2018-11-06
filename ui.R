@@ -35,7 +35,7 @@ shinyUI(tagList(
         div(class="page-header", h1("Use pre-trained network")),
         makeTitledPanel("Pre-trained networks",
           fluidRow(
-            column(width=4, selectInput("pretrainedModel", NULL, PRETRAINED_MODELS, width="100%")),
+            column(width=4, selectInput("pretrainedModel", NULL, NULL, width="100%")),
             column(width=4, actionButton("usePretrainedButton", "Use pre-trained model", class="btn-primary"))
           )
         ),
@@ -46,7 +46,7 @@ shinyUI(tagList(
             column(width=4, selectInput("seqFormat", "File format", c("FASTA file"="fasta", "BED file"="bed"))),
             column(width=4, fileInput("seqFile", "Sequence file")),
             conditionalPanel("input.seqFormat == 'bed'",
-              column(width=4, selectInput("seqAssembly", "Assembly", c("Human (GRCh38/hg38)"="hg38", "Human (GRCh37/hg19)"="hg19", "Mouse (GRCm38/mm10)"="mm10")))
+              column(width=4, selectInput("seqAssembly", "Assembly", REFERENCE_SPECIES))
             )
           )
         ),
@@ -67,20 +67,34 @@ shinyUI(tagList(
           )
         ),
         makeTitledPanel("Parameters",
-          p("Data preprocessing:"),
+          h3("Sequence preprocessing", class="no-top-margin"),
+          
           tags$ul(
             tags$li("Min. sequence length: all sequences shorter than this will be discarded."),
             tags$li("Max. sequence length: all sequences longer than this will be discarded."),
-            tags$li("If Pad sequences is given all sequences will be padded with this number of surrounding bases. (BED file only)"),
-            tags$li("If Fixed sequence width is given all sequences will be trimmed/padded to fit this length. (BED file only)")
+            tags$li("BED file only: If Pad sequences is given all sequences will be padded with this number of surrounding bases."),
+            tags$li("BED file only: If Fixed sequence width is given all sequences will be trimmed/padded to fit this length.")
           ),
+          
           fluidRow(
-            column(width=3, numericInput("minLength", "Min. sequence length", min=1, max=100, value=1)),
-            column(width=3, numericInput("maxLength", "Max. sequence length", min=1, max=100, value=100)),
+            column(width=3, numericInput("minLength", "Min. sequence length", min=1, max=150, value=1)),
+            column(width=3, numericInput("maxLength", "Max. sequence length", min=1, max=150, value=75)),
             column(width=3, numericInput("bedWidth", "Fixed sequence width", min=1, max=100, value=NA)),
             column(width=3, numericInput("bedPadding", "Pad sequences", min=0, max=20, value=NA))
           ),
-          sliderInput("epochs", "Training time", min=1, max=10, value=5, step=1, post = " epochs", width="100%")
+          h3("Data split"),
+          p("Specify how sequences should be split for training, validation and testing."),
+          fluidRow(
+            column(width=3, numericInput("trainSplit", "Training (%)", min=1, max=98, value=80, step=1)),
+            column(width=3, numericInput("valSplit", "Validation (%)", min=1, max=98, value=10, step=1)),
+            column(width=3, numericInput("testSplit", "Testing (%)", min=1, max=98, value=10, step=1))
+          ),
+          h3("Program control"),
+          fluidRow(
+            column(width=4, sliderInput("epochs", "Training time", min=1, max=25, value=10, step=1, post = " epochs")),
+            column(width=3, numericInput("earlyStopping", "Early stopping", min=1, max=25, value=NA, step=1)),
+            column(width=3, textInput("randomSeed", "Random seed", value="", placeholder="An integer seed"))
+          )
         ),
         actionButton("trainButton", "Train network", class="btn-lg btn-primary")
       ),
@@ -96,17 +110,18 @@ shinyUI(tagList(
         tabsetPanel(
           tabPanel("Summary",
             fluidRow(
-              column(width=6,
+              column(width=5,
                 h2("ROC curve"),
                 plotOutput("testROCPlot", width=400, height=400)
               ),
-              column(width=6,
-                h2("Prediction score distribution"),
-                plotOutput("testPredDistPlot")
+              column(width=7,
+                h2("CNN filters ranked by score"),
+                plotOutput("testPFMLogos", width=600, height=500)
               )
             ),
-            h2("CNN filters ranked by score"),
-            plotOutput("testPFMLogos", width=800, height=800)
+            h2("Prediction score distribution"),
+            plotOutput("testPredDistPlot"),
+            downloadButton("downloadSummaryPlots", "Download all plots", class="btn-primary")
           ),
           tabPanel("Prediction",
             fluidRow(style="margin-top: 20px;",
@@ -128,6 +143,9 @@ shinyUI(tagList(
             ),
             actionButton("predictButton", "Run prediction", class="btn-lg btn-primary"),
             h3("Predictions"),
+            conditionalPanel("typeof(input.predictionTable_rows_selected) != 'undefined' && input.predictionTable_rows_selected.length > 0", 
+              downloadButton("downloadPredictionProfilePlot", "Download profile", class="btn-sm")
+            ),
             plotOutput("predictionProfilePlot", height=300),
             DTOutput("predictionTable")
           )
