@@ -240,8 +240,10 @@ shinyServer(function(input, output, session) {
       
       xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
       
-      ggplot(tbl, aes(pos, weight)) +
-        geom_line(aes(color=group)) +
+      p <- ggplot(tbl, aes(pos, weight))
+      if(input$profilePlotDifference) p <- p + geom_hline(yintercept=0, color="dodgerblue")
+      p +
+        geom_line(aes(color=group), size=0.8) +
         scale_x_continuous(breaks=seq(1, max(tbl$pos)), labels=xlabels) +
         scale_color_manual(values=c("black", "red")) +
         mytheme() +
