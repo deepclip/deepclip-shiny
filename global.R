@@ -42,6 +42,7 @@ PRETRAINED_MODELS <- read.table(header=TRUE, sep=',', quote='"', text='
 "ELAVL1B","ELAVL1(B) PAR-CLIP (Lebedeva et al. 2011)","ELAVL1(B)","PAR-CLIP","Lebedeva et al. 2011"
 "EWSR1","EWSR1 PAR-CLIP (Hoell et al. 2011)","EWSR1","PAR-CLIP","Hoell et al. 2011"
 "FUS","FUS PAR-CLIP (Hoell et al. 2011)","FUS","PAR-CLIP","Hoell et al. 2011"
+"hnRNPA1","hnRNPA1 iCLIP (Bruun et al. 2016)","hnRNPA1","iCLIP","Bruun et al. 2016"
 "hnRNPC","hnRNPC iCLIP (König et al. 2010)","hnRNPC","iCLIP","König et al. 2010"
 "HuR","HuR PAR-CLIP (Mukherjee et al. 2011)","HuR","PAR-CLIP","Mukherjee et al. 2011"
 "IGF2BP1-3","IGF2BP1-3 PAR-CLIP (Hafner et al. 2010)","IGF2BP1-3","PAR-CLIP","Hafner et al. 2010"
