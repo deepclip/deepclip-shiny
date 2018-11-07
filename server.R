@@ -76,6 +76,17 @@ shinyServer(function(input, output, session) {
     )
   ))
   
+  output$summaryText <- renderUI({
+    params <- jsonlite::read_json(getParamsPath(jobID()))
+    tagList(
+      strong("Sequence type: "), params$seq_type, br(),
+      if(!is.null(params$random_seed)) tagList(strong("Random seed: "), params$random_seed, br()),
+      strong("Num. epochs: "), params$epochs, br(),
+      if(!is.null(params$early_stopping)) tagList(strong("Early stopping: "), params$early_stopping, br()),
+      strong("Data split: "), paste0(c("Training: ", "Validation: ", "Testing: "), params$data_split, "%", collapse=", ")
+    )
+  })
+  
   output$jobStatusText <- renderText({
     sprintf("Job ID: %s, status: %d (%s)", jobID(), jobStatus(), JOB_STATUS_NAMES[as.character(jobStatus())])
   })
@@ -97,9 +108,8 @@ shinyServer(function(input, output, session) {
   testROCPlot <- function() {
     jobid <- req(jobID())
     validate(need(jobStatus() == JOB_STATUS_SUCCESS, "Job not completed"))
-    test.path <- getTestOutputPath(jobid)
     
-    data <- jsonlite::read_json(test.path)
+    data <- jsonlite::read_json(getTestOutputPath(jobid))
     roc <- data.frame(
       fpr = sapply(data$data, "[[", 1),
       tpr = sapply(data$data, "[[", 2)
@@ -110,6 +120,7 @@ shinyServer(function(input, output, session) {
       geom_step() +
       labs(x="False positive rate", y="True positive rate") +
       geom_abline(intercept=0, slope=1, linetype="dashed", color="#404040") +
+      ggtitle(paste0("AUROC: ", formatC(data$auroc, digits=2))) +
       mytheme()
   }
   
@@ -118,9 +129,9 @@ shinyServer(function(input, output, session) {
   testPFMLogos <- function() {
     jobid <- req(jobID())
     validate(need(jobStatus() == JOB_STATUS_SUCCESS, "Job not completed"))
-    pfm.path <- getPFMPath(jobid)
     
-    data <- jsonlite::read_json(pfm.path)
+    data <- jsonlite::read_json(getPFMPath(jobid))
+    params <- jsonlite::read_json(getParamsPath(jobid))
     
     library(ggplot2)
     library(ggseqlogo)
@@ -129,10 +140,11 @@ shinyServer(function(input, output, session) {
       pfm <- do.call(rbind, lapply(logo[["pfm"]], unlist))
       sum(colSums(pfm * log2(pfm + 0.000000001)) + log2(4)) / ncol(pfm)
     })
+    seq_letters <- c("A", "C", "G", ifelse(params$seq_type == "DNA", "T", "U"))
     logos <- lapply(data[["logos"]], function(logo) {
       weights <- lapply(logo[["pfm"]], unlist)
       weights <- do.call(rbind, weights)
-      rownames(weights) <- c("A","C","G","U")
+      rownames(weights) <- seq_letters
       weights
     })
     names(logos) <- formatC(scores)
@@ -212,14 +224,19 @@ shinyServer(function(input, output, session) {
     } else {
       weights1 <- unlist(x$weights)
       weights2 <- unlist(x$variant_weights)
+      if(input$profilePlotDifference) weights2 <- weights2 - weights1
       seq1 <- strsplit(toupper(x$sequence), "")[[1]]
       seq2 <- strsplit(toupper(x$variant_sequence), "")[[1]]
       
       tbl <- data.frame(
         pos = c(seq_along(seq1), seq_along(seq2)),
-        weight = c(weights1, weights2),
-        group = factor(c(rep("reference", length(seq1)), rep("variant", length(seq2))), levels=c("reference","variant"))
+        weight = c(weights1, weights2)
       )
+      if(input$profilePlotDifference) {
+        tbl$group <- factor(c(rep("reference", length(seq1)), rep("difference", length(seq2))), levels=c("reference","difference"))
+      } else {
+        tbl$group <- factor(c(rep("reference", length(seq1)), rep("variant", length(seq2))), levels=c("reference","variant"))
+      }
       
       xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
       
@@ -239,7 +256,9 @@ shinyServer(function(input, output, session) {
   output$predictionProfilePlot <- renderPlot(res=100, predictionProfilePlot())
   
   output$downloadPredictionProfilePlot <- downloadHandler(
-    filename = "profile.pdf", contentType="application/pdf", content=function(file) {
+    filename = function() { sprintf("profile_%d.pdf", input$predictionTable_rows_selected[1]) },
+    contentType="application/pdf",
+    content=function(file) {
       p <- predictionProfilePlot()
       ggsave(plot=p, filename=file, width=10, height=3, units="in")
     }
@@ -339,6 +358,7 @@ shinyServer(function(input, output, session) {
       "--predict_PFM_file", predict_pfm.path,
       "--data_split", data_split / 100,
       if(!is.null(random_seed)) c("--random_seed", random_seed),
+      if(!is.na(input$early_stopping)) c("--early_stopping", input$earlyStopping),
       if(input$seqFormat == "bed") {
         c(
           "--force_bed",
@@ -367,6 +387,17 @@ shinyServer(function(input, output, session) {
       
       file.remove(tmpSeqFile, tmpBkgFile)
     }, detached=TRUE)
+    
+    params <- list(
+      seq_type = input$seqType, seq_format = input$seqFormat, seq_assembly = input$seqAssembly,
+      epochs = input$epochs, early_stopping = input$earlyStopping,
+      data_split = data_split, random_seed = random_seed,
+      min_length = input$minLength, max_length = input$maxLength,
+      bed_width = input$bedWidth, bed_padding = input$bedPadding
+    )
+    params.path <- getParamsPath(jobid)
+    param_json = jsonlite::write_json(params, params.path, auto_unbox=TRUE)
+    
     session$sendCustomMessage("redirectJob", as.character(jobid))
   })
   

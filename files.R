@@ -1,3 +1,7 @@
+getParamsPath <- function(jobid) {
+  paste0(RESULTS_PATH, "/params_", jobid, ".json")
+}
+
 getPredictFunctionPath <- function(jobid) {
   paste0(RESULTS_PATH, "/predict_fn_", jobid, ".pkl")
 }
