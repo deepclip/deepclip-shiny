@@ -1,1 +1,1 @@
-{"seq_type":["RNA"],"seq_format":["fasta"],"epochs":["NA"],"early_stopping":[20],"data_split":["N/A","N/A","N/A"],"min_length":["N/A"],"max_length":[75]}
+{"seq_type":"RNA","seq_format":"fasta","epochs":"NA","early_stopping":20,"data_split":["N/A","N/A","N/A"],"min_length":"N/A","max_length":75}
