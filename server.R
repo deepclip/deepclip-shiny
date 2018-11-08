@@ -360,7 +360,7 @@ shinyServer(function(input, output, session) {
       "--predict_PFM_file", predict_pfm.path,
       "--data_split", data_split / 100,
       if(!is.null(random_seed)) c("--random_seed", random_seed),
-      if(!is.na(input$early_stopping)) c("--early_stopping", input$earlyStopping),
+      if(!is.null(input$early_stopping)) c("--early_stopping", input$earlyStopping),
       if(input$seqFormat == "bed") {
         c(
           "--force_bed",
