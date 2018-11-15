@@ -3,8 +3,6 @@ library(shinyjs)
 library(DT)
 library(shinyWidgets)
 
-redirectJobHandlerCode <- "Shiny.addCustomMessageHandler('redirectJob', function(jobid) { window.location='?jobid='+jobid; });"
-
 makeFooter <- function() {
   versionstr <- paste0("deepclip-shiny version ", VERSION)
   tagList(
@@ -21,16 +19,13 @@ makeTitledPanel <- function(title, ...) {
 }
 
 shinyUI(tagList(
-  tags$head(
-    tags$script(type="text/javascript", redirectJobHandlerCode),
-    tags$link(rel="stylesheet", type="text/css", href="css/style.css"),
-    tags$link(rel="stylesheet", type="text/css", href="css/loader.css")
-  ),
+  includeScript("www/js/redirect.js"),
+  includeCSS("www/css/style.css"),
+  includeCSS("www/css/loader.css"),
   useShinyjs(),
   div(id="loading-content", h2("Loading..."), div(class="loader", "Loading")),
   navbarPage(windowTitle="DeepCLIP", "DeepCLIP", fluid=FALSE, inverse=TRUE, footer=makeFooter(),
-    tabPanel(tagList(icon("window-maximize"), HTML("Dashboard</a></li><li><a href='/'><i class='fa fa-refresh'></i> Start over</a>")),
-      textOutput("jobStatusText"),
+    tabPanel(tagList(icon("window-maximize"), "Dashboard"),
       conditionalPanel("output.jobID == null",
         div(class="page-header", h1("Use pre-trained network")),
         makeTitledPanel("Pre-trained networks",
@@ -110,7 +105,7 @@ shinyUI(tagList(
         )
       ),
       conditionalPanel("output.jobStatus == 1",
-        tabsetPanel(
+        tabsetPanel(id="model_tabs",
           tabPanel("Summary",
             h2("Model summary"),
             uiOutput("summaryText"),
@@ -128,7 +123,7 @@ shinyUI(tagList(
             plotOutput("testPredDistPlot"),
             downloadButton("downloadSummaryPlots", "Download all plots", class="btn-primary")
           ),
-          tabPanel("Prediction",
+          tabPanel(HTML("Prediction</a></li><li style='float:right'><a href='/' class='btn-primary'><i class='fa fa-refresh'></i> Start over"),
             fluidRow(style="margin-top: 20px;",
               column(width=6,
                 div(class="panel panel-default",

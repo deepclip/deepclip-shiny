@@ -73,3 +73,8 @@
 .no-top-margin {
   margin-top: 0;
 }
+
+#model_tabs li {
+  min-width: 150px;
+  text-align: center;
+}
