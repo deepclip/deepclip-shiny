@@ -463,5 +463,7 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  hide(id="loading-content", anim=TRUE, animType="fade")
+  session$onFlushed(function() {
+    hide(id="loading-content", anim=TRUE, animType="fade")
+  })
 })
