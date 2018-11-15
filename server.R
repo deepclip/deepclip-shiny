@@ -87,14 +87,11 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  output$jobStatusText <- renderText({
-    sprintf("Job ID: %s, status: %d (%s)", jobID(), jobStatus(), JOB_STATUS_NAMES[as.character(jobStatus())])
-  })
-  
   output$jobLog <- renderText({
     jobid <- jobID()
     status <- jobStatus()
     if(status == JOB_STATUS_ACTIVE) autoInvalidate()
+    if(status != 2) return("")
     
     log.path <- getJobLogPath(jobid)
     log.data <- readChar(log.path, file.info(log.path)$size)
@@ -298,6 +295,10 @@ shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$usePretrainedButton, {
+    if(input$pretrainedModel == "") {
+      alert("Please select a model from the menu.")
+      return()
+    }
     session$sendCustomMessage("redirectJob", input$pretrainedModel)
   })
   
@@ -462,5 +463,7 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  hide(id="loading-content", anim=TRUE, animType="fade")
+  session$onFlushed(function() {
+    hide(id="loading-content", anim=TRUE, animType="fade")
+  })
 })
