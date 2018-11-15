@@ -295,6 +295,10 @@ shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$usePretrainedButton, {
+    if(input$pretrainedModel == "") {
+      alert("Please select a model from the menu.")
+      return()
+    }
     session$sendCustomMessage("redirectJob", input$pretrainedModel)
   })
   
