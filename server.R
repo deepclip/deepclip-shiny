@@ -87,14 +87,11 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  output$jobStatusText <- renderText({
-    sprintf("Job ID: %s, status: %d (%s)", jobID(), jobStatus(), JOB_STATUS_NAMES[as.character(jobStatus())])
-  })
-  
   output$jobLog <- renderText({
     jobid <- jobID()
     status <- jobStatus()
     if(status == JOB_STATUS_ACTIVE) autoInvalidate()
+    if(status != 2) return("")
     
     log.path <- getJobLogPath(jobid)
     log.data <- readChar(log.path, file.info(log.path)$size)
