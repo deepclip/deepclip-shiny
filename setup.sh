@@ -6,10 +6,3 @@ pip2 install matplotlib
 pip2 install scikit-learn
 pip2 install biopython
 pip2 install HTSeq
-
-mkdir -p /srv/deepclip/code /srv/deepclip/results
-
-chown -R shiny:shiny /srv/deepclip 
-usermod -a -G shiny root
-usermod -a -G shiny shiny
-chmod -R g+rw /srv/deepclip
