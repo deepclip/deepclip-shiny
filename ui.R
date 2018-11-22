@@ -152,7 +152,9 @@ shinyUI(tagList(
             h3("Predictions"),
             DTOutput("predictionTable"),
             plotOutput("predictionProfilePlot", height=300),
-            materialSwitch("profilePlotDifference", "Plot profile difference (with variants only)", value=FALSE, inline=TRUE, status="primary"),
+            conditionalPanel("input.predictPaired == true",
+              materialSwitch("profilePlotDifference", "Plot profile difference (with variants only)", value=FALSE, inline=TRUE, status="primary")
+            ),
             conditionalPanel("typeof(input.predictionTable_rows_selected) != 'undefined' && input.predictionTable_rows_selected.length > 0", 
               downloadButton("downloadPredictionProfilePlot", "Download profile", class="btn-sm")
             )

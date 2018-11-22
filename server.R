@@ -45,6 +45,14 @@ copyTempFile <- function(path, name) {
   tmpfile
 }
 
+checkValidFasta <- function(text) {
+  if(!startsWith(text, ">")) return(FALSE)
+  first_nl <- regexpr("\n", text)[1]
+  if(first_nl == -1) return(FALSE)
+  if(!tolower(substring(text, first_nl+1, first_nl+1)) %in% c("a","c","g","t","u")) return(FALSE)
+  return(TRUE)
+}
+
 shinyServer(function(input, output, session) {
   currentPredictions <- reactiveVal()
   
@@ -420,12 +428,21 @@ shinyServer(function(input, output, session) {
       seqfile1 <- tempfile(fileext=".fa")
       seqfile2 <- tempfile(fileext=".fa")
       if(input$predictSeqText != "") {
+        if(!checkValidFasta(input$predictSeqText)) {
+          addClass("predictSeqPanel", "has-error")
+          alert("Sequences provided in left text area is not in valid FASTA format.")
+          return()
+        }
         write(input$predictSeqText, file=seqfile1)
       } else {
         file.copy(input$predictSeq$datapath, seqfile1)
       }
       if(input$predictPaired) {
         if(input$predictSeqText2 != "") {
+          if(!checkValidFasta(input$predictSeqText2)) {
+            alert("Sequences provided in right text area is not valid FASTA format.")
+            return()
+          }
           write(input$predictSeqText2, file=seqfile2)
         }
         else if(isTruthy(input$predictSeq2)) {
