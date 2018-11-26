@@ -2,13 +2,12 @@ library(shiny)
 library(shinyjs)
 library(DT)
 library(DBI)
-library(RSQLite)
 
 source("theme.R")
 source("files.R")
 
 createJob <- function() {
-  db <- dbConnect(SQLite(), SQLITE_PATH)
+  db <- dbConnect(RSQLite::SQLite(), SQLITE_PATH)
   
   query <- sqlInterpolate(db, "INSERT INTO jobs (token, status) VALUES ('', ?status)", status=JOB_STATUS_ACTIVE)
   dbExecute(db, query)
@@ -23,14 +22,14 @@ createJob <- function() {
 }
 
 updateJobStatus <- function(token, status) {
-  db <- dbConnect(SQLite(), SQLITE_PATH)
+  db <- dbConnect(RSQLite::SQLite(), SQLITE_PATH)
   query <- sqlInterpolate(db, "UPDATE jobs SET status = ?status WHERE token = ?token ;", token=token, status=status)
   dbExecute(db, query)
   dbDisconnect(db)
 }
 
 getJobStatus <- function(token) {
-  db <- dbConnect(SQLite(), SQLITE_PATH)
+  db <- dbConnect(RSQLite::SQLite(), SQLITE_PATH)
   query <- sqlInterpolate(db, "SELECT status FROM jobs WHERE token = ?token ;", token=token)
   res <- dbGetQuery(db, query)
   dbDisconnect(db)
