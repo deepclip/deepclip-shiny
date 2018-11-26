@@ -98,7 +98,7 @@ shinyServer(function(input, output, session) {
     jobid <- jobID()
     status <- jobStatus()
     if(status == JOB_STATUS_ACTIVE) autoInvalidate()
-    if(status != 2) return("")
+    if(status != JOB_STATUS_ERROR) return("")
     
     log.path <- getJobLogPath(jobid)
     log.data <- readChar(log.path, file.info(log.path)$size)
@@ -128,6 +128,34 @@ shinyServer(function(input, output, session) {
       mytheme()
   }
   
+  output$jobProgressBar <- renderUI({
+    jobid <- jobID()
+    status <- jobStatus()
+    if(status != JOB_STATUS_ACTIVE) return()
+    autoInvalidate()
+    
+    params <- jsonlite::read_json(getParamsPath(jobid))
+    total_epochs <- params$epochs
+    
+    log.lines <- suppressWarnings(readLines(getJobLogPath(jobid), -1))
+    status.lines <- which(grepl("\\s+Epoch [0-9]+ of [0-9]+", log.lines))
+    
+    current_epoch <- 0
+    if(length(status.lines) > 0) {
+      last.line <- log.lines[status.lines[length(status.lines)]]
+      parts <- strsplit(trimws(last.line), " ")[[1]]
+      current_epoch <- as.numeric(parts[2])
+    }
+    
+    pct <- formatC(round((current_epoch+1) / (total_epochs+2) * 100))
+    if(current_epoch == 0) {
+      status_text <- "Compiling model"
+    } else {
+      status_text <- sprintf("Epoch %d of %d", current_epoch, total_epochs)
+    }
+    HTML(sprintf('<div class="progress"><div class="progress-bar progress-bar-striped active" style="width: %s%%;">%s</div></div>', pct, status_text))
+  })
+
   output$testROCPlot <- renderPlot(res=120, testROCPlot())
   
   testPFMLogos <- function() {

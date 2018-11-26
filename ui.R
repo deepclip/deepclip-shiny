@@ -97,9 +97,9 @@ shinyUI(tagList(
         actionButton("trainButton", "Train network", class="btn-lg btn-primary")
       ),
       conditionalPanel("output.jobStatus == 0",
-        div(class="well", style="max-width:600px; margin:auto; text-align:center;",
-          h2("Training network"),
-          tags$img(src="img/spinner.gif"),
+        div(class="well", id="trainingProgressBox",
+          h2("Training network", class="no-top-margin"),
+          uiOutput("jobProgressBar"),
           p("DeepCLIP is currently training your network. This page will automatically redirect once the training is complete."),
           p("You can bookmark this page and come back later.")
         )
