@@ -151,11 +151,11 @@ shinyUI(tagList(
             actionButton("predictButton", "Run prediction", class="btn-lg btn-primary"),
             h3("Predictions"),
             DTOutput("predictionTable"),
-            plotOutput("predictionProfilePlot", height=300),
-            conditionalPanel("input.predictPaired == true",
-              materialSwitch("profilePlotDifference", "Plot profile difference (with variants only)", value=FALSE, inline=TRUE, status="primary")
-            ),
             conditionalPanel("typeof(input.predictionTable_rows_selected) != 'undefined' && input.predictionTable_rows_selected.length > 0", 
+              plotOutput("predictionProfilePlot", height=300),
+              conditionalPanel("input.predictPaired == true",
+                materialSwitch("profilePlotDifference", "Plot profile difference (with variants only)", value=FALSE, inline=TRUE, status="primary")
+              ),
               downloadButton("downloadPredictionProfilePlot", "Download profile", class="btn-sm")
             )
           )
