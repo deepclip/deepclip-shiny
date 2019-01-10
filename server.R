@@ -149,7 +149,7 @@ shinyServer(function(input, output, session) {
     
     pct <- formatC(round((current_epoch+1) / (total_epochs+2) * 100))
     if(current_epoch == 0) {
-      status_text <- "Compiling model"
+      status_text <- "Compiling"
     } else {
       status_text <- sprintf("Epoch %d of %d", current_epoch, total_epochs)
     }

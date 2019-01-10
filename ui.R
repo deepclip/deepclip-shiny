@@ -27,14 +27,14 @@ shinyUI(tagList(
   navbarPage(windowTitle="DeepCLIP", "DeepCLIP", fluid=FALSE, inverse=TRUE, footer=makeFooter(),
     tabPanel(tagList(icon("window-maximize"), "Dashboard"),
       conditionalPanel("output.jobID == null",
-        div(class="page-header", h1("Use pre-trained network")),
-        makeTitledPanel("Pre-trained networks",
+        div(class="page-header", h1("Use pre-trained model")),
+        makeTitledPanel("Pre-trained model",
           fluidRow(
             column(width=4, selectInput("pretrainedModel", NULL, NULL, width="100%")),
             column(width=3, actionButton("usePretrainedButton", "Use pre-trained model", class="btn-primary"))
           )
         ),
-        div(class="page-header", h1("Train new network")),
+        div(class="page-header", h1("Train new model")),
         makeTitledPanel("Binding sequences",
           p("Select how binding sequences will be provided. If BED file is selected, a target species and assembly must be selected as well."),
           fluidRow(
@@ -94,13 +94,13 @@ shinyUI(tagList(
             column(width=3, textInput("randomSeed", "Random seed", value="", placeholder="An integer seed"))
           )
         ),
-        actionButton("trainButton", "Train network", class="btn-lg btn-primary")
+        actionButton("trainButton", "Train model", class="btn-lg btn-primary")
       ),
       conditionalPanel("output.jobStatus == 0",
         div(class="well", id="trainingProgressBox",
-          h2("Training network", class="no-top-margin"),
+          h2("Training model", class="no-top-margin"),
           uiOutput("jobProgressBar"),
-          p("DeepCLIP is currently training your network. This page will automatically redirect once the training is complete."),
+          p("DeepCLIP is currently training your model. This page will automatically redirect once the training is complete."),
           p("You can bookmark this page and come back later.")
         )
       ),
