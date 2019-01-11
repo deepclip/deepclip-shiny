@@ -323,7 +323,7 @@ shinyServer(function(input, output, session) {
         dom="Bfrtip",
         buttons=list(
           list(extend="csv", text="Download CSV", filename="predictions"),
-          list(extend="excel", text="Download Excel", filename="predictions", title=NULL)
+          list(extend="excel", text="Download Excel", filename="predictions", title="predictions")
         )
       )
     )
