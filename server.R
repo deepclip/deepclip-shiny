@@ -87,7 +87,7 @@ shinyServer(function(input, output, session) {
     params <- jsonlite::read_json(getParamsPath(jobID()))
     tagList(
       strong("Sequence type: "), params$seq_type, br(),
-      if(!is.null(params$random_seed)) tagList(strong("Random seed: "), params$random_seed, br()),
+      if(length(params$random_seed) > 0) tagList(strong("Random seed: "), params$random_seed, br()),
       strong("Num. epochs: "), params$epochs, br(),
       if(!is.null(params$early_stopping)) tagList(strong("Early stopping: "), params$early_stopping, br()),
       strong("Data split: "), paste0(c("Training: ", "Validation: ", "Testing: "), params$data_split, "%", collapse=", ")
