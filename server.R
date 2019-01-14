@@ -256,18 +256,23 @@ shinyServer(function(input, output, session) {
     } else {
       weights1 <- unlist(x$weights)
       weights2 <- unlist(x$variant_weights)
-      if(input$profilePlotDifference) weights2 <- weights2 - weights1
+      
       seq1 <- strsplit(toupper(x$sequence), "")[[1]]
       seq2 <- strsplit(toupper(x$variant_sequence), "")[[1]]
       
-      tbl <- data.frame(
-        pos = c(seq_along(seq1), seq_along(seq2)),
-        weight = c(weights1, weights2)
-      )
       if(input$profilePlotDifference) {
-        tbl$group <- factor(c(rep("reference", length(seq1)), rep("difference", length(seq2))), levels=c("reference","difference"))
+        weights2 <- weights2 - weights1
+        tbl <- data.frame(
+          pos = seq_along(seq2),
+          weight = weights2,
+          group = factor(rep("difference", length(seq2)))
+        )
       } else {
-        tbl$group <- factor(c(rep("reference", length(seq1)), rep("variant", length(seq2))), levels=c("reference","variant"))
+        tbl <- data.frame(
+          pos = c(seq_along(seq1), seq_along(seq2)),
+          weight = c(weights1, weights2),
+          group = factor(c(rep("reference", length(seq1)), rep("variant", length(seq2))), levels=c("reference","variant"))
+        )
       }
       
       xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
