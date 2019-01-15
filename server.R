@@ -86,11 +86,15 @@ shinyServer(function(input, output, session) {
   output$summaryText <- renderUI({
     params <- jsonlite::read_json(getParamsPath(jobID()))
     tagList(
+      if(length(params$protein) > 0) tagList(strong("Protein: "), params$protein, br()),
+      if(length(params$citation) > 0) tagList(strong("Citation: "), params$citation, br()),
+      if(length(params$clip_method) > 0) tagList(strong("CLIP method: "), params$clip_method, br()),
+      if(length(params$num_peaks) > 0) tagList(strong("Number of peaks: "), params$num_peaks, br()),
       strong("Sequence type: "), params$seq_type, br(),
       if(length(params$random_seed) > 0) tagList(strong("Random seed: "), params$random_seed, br()),
       strong("Num. epochs: "), params$epochs, br(),
       if(!is.null(params$early_stopping)) tagList(strong("Early stopping: "), params$early_stopping, br()),
-      strong("Data split: "), paste0(c("Training: ", "Validation: ", "Testing: "), params$data_split, "%", collapse=", ")
+      strong("Data split: "), paste0(c("Training: ", "validation: ", "testing: "), params$data_split, "%", collapse=", ")
     )
   })
   
