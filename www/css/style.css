@@ -85,3 +85,8 @@
   text-align: center;
   padding: 40px;
 }
+
+#startOverButton:hover {
+  background-color: #589dd8;
+  border: 1px solid transparent;
+}

@@ -123,7 +123,7 @@ shinyUI(tagList(
             plotOutput("testPredDistPlot"),
             downloadButton("downloadSummaryPlots", "Download all plots", class="btn-primary")
           ),
-          tabPanel(HTML("Prediction</a></li><li style='float:right'><a href='/' class='btn-primary'><i class='fa fa-refresh'></i> Start over"),
+          tabPanel(HTML("Prediction</a></li><li style='float:right'><a id='startOverButton' href='/' class='btn-primary'><i class='fa fa-refresh'></i> Start over"),
             fluidRow(style="margin-top: 20px;",
               column(width=6,
                 div(class="panel panel-default",
