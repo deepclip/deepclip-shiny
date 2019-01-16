@@ -158,7 +158,8 @@ shinyUI(tagList(
                   materialSwitch("profilePlotDifference", "Plot profile difference (with variants only)", value=FALSE, inline=TRUE, status="primary")
                 )
               ),
-              downloadButton("downloadAllPredictionProfilePlots", "Download profiles", class="btn-sm")
+              downloadButton("downloadAllPredictionProfilePlots", "Download profile plots"),
+              downloadButton("downloadPredictionData", "Download profile data")
             )
           )
         )

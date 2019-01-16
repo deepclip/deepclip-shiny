@@ -311,7 +311,7 @@ shinyServer(function(input, output, session) {
   output$downloadAllPredictionProfilePlots <- downloadHandler(
     filename = function() { sprintf("%s_profiles.zip", jobID()) },
     contentType = "application/zip",
-    content=function(file) {
+    content = function(file) {
       preds <- req(currentPredictions())
       outfiles <- sapply(seq_along(preds), function(i) {
         x <- preds[[i]]
@@ -326,6 +326,15 @@ shinyServer(function(input, output, session) {
       })
       zip(file, outfiles, extras="-j")
       rm(list=outfiles)
+    }
+  )
+  
+  output$downloadPredictionData <- downloadHandler(
+    filename = function() { sprintf("%s_predictions.json", jobID()) },
+    contentType = "application/json",
+    content = function(file) {
+      preds <- req(currentPredictions())
+      jsonlite::write_json(preds, file, auto_unbox=TRUE)
     }
   )
   
