@@ -52,6 +52,59 @@ checkValidFasta <- function(text) {
   return(TRUE)
 }
 
+makePredictionProfilePlot <- function(x, plot_difference) {
+  if(is.null(x[["variant_sequence"]])) {
+    weights <- unlist(x$weights)
+    seq <- strsplit(toupper(x$sequence), "")[[1]]
+    tbl <- data.frame(pos=seq_along(weights), weight=weights)
+    
+    ggplot(tbl, aes(pos, weight)) +
+      geom_line() +
+      scale_x_continuous(breaks=seq(1, length(weights)), labels=seq) +
+      mytheme() +
+      theme(
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size=11)
+      ) + labs(y="DeepCLIP score")
+  } else {
+    weights1 <- unlist(x$weights)
+    weights2 <- unlist(x$variant_weights)
+    
+    seq1 <- strsplit(toupper(x$sequence), "")[[1]]
+    seq2 <- strsplit(toupper(x$variant_sequence), "")[[1]]
+    
+    if(plot_difference) {
+      weights2 <- weights2 - weights1
+      tbl <- data.frame(
+        pos = seq_along(seq2),
+        weight = weights2,
+        group = factor(rep("difference", length(seq2)))
+      )
+    } else {
+      tbl <- data.frame(
+        pos = c(seq_along(seq1), seq_along(seq2)),
+        weight = c(weights1, weights2),
+        group = factor(c(rep("reference", length(seq1)), rep("variant", length(seq2))), levels=c("reference","variant"))
+      )
+    }
+    
+    xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
+    
+    p <- ggplot(tbl, aes(pos, weight))
+    if(plot_difference) p <- p + geom_hline(yintercept=0, color="dodgerblue")
+    p +
+      geom_line(aes(color=group), size=0.8) +
+      scale_x_continuous(breaks=seq(1, max(tbl$pos)), labels=xlabels) +
+      scale_color_manual(values=c("black", "red")) +
+      mytheme() +
+      theme(
+        legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size=11)
+      ) + labs(y="DeepCLIP score")
+  }
+}
+
 shinyServer(function(input, output, session) {
   currentPredictions <- reactiveVal()
   
@@ -72,6 +125,12 @@ shinyServer(function(input, output, session) {
   })
   output$jobStatus <- reactive(jobStatus())
   outputOptions(output, "jobStatus", suspendWhenHidden=FALSE)
+  
+  output$hasPredictions <- reactive({
+    req(currentPredictions())
+    return(TRUE)
+  })
+  outputOptions(output, "hasPredictions", suspendWhenHidden=FALSE)
   
   updateSelectizeInput(session, "pretrainedModel", choices=PRETRAINED_MODELS, server=TRUE,
     options=list(placeholder="Select or search for a model.", render=I(
@@ -226,84 +285,47 @@ shinyServer(function(input, output, session) {
       p.pfm <- testPFMLogos()
       p.dist <- testPredDistPlot()
       
-      file.roc <- tempfile(pattern="roc", fileext=".pdf")
-      file.pfm <- tempfile(pattern="pfm", fileext=".pdf")
-      file.dist <- tempfile(pattern="scoredist", fileext=".pdf")
+      file.roc <- tempfile(pattern="roc_", fileext=".pdf")
+      file.pfm <- tempfile(pattern="pfm_", fileext=".pdf")
+      file.dist <- tempfile(pattern="scoredist_", fileext=".pdf")
       
       ggsave(file.roc, p.roc, width=3.7, height=3.7, units="in")
       ggsave(file.pfm, p.pfm, width=6, height=5, units="in")
       ggsave(file.dist, p.dist, width=11.4, height=4, units="in")
       
       zip(file, c(file.roc, file.pfm, file.dist), extras="-j")
+      rm(file.roc, file.pfm, file.dist)
     }
   )
   
-  predictionProfilePlot <- function() {
+  currentPredictionProfilePlot <- function() {
     validate(need(input$predictionTable_rows_selected, "Select a row in the table below to show the binding profile."))
     rowid <- req(input$predictionTable_rows_selected)
     preds <- req(currentPredictions())
     x <- preds[[rowid]]
-    
-    if(is.null(x[["variant_sequence"]])) {
-      weights <- unlist(x$weights)
-      seq <- strsplit(toupper(x$sequence), "")[[1]]
-      tbl <- data.frame(pos=seq_along(weights), weight=weights)
-      
-      ggplot(tbl, aes(pos, weight)) +
-        geom_line() +
-        scale_x_continuous(breaks=seq(1, length(weights)), labels=seq) +
-        mytheme() +
-        theme(
-          axis.title.x = element_blank(),
-          axis.text.x = element_text(size=11)
-        ) + labs(y="DeepCLIP score")
-    } else {
-      weights1 <- unlist(x$weights)
-      weights2 <- unlist(x$variant_weights)
-      
-      seq1 <- strsplit(toupper(x$sequence), "")[[1]]
-      seq2 <- strsplit(toupper(x$variant_sequence), "")[[1]]
-      
-      if(input$profilePlotDifference) {
-        weights2 <- weights2 - weights1
-        tbl <- data.frame(
-          pos = seq_along(seq2),
-          weight = weights2,
-          group = factor(rep("difference", length(seq2)))
-        )
-      } else {
-        tbl <- data.frame(
-          pos = c(seq_along(seq1), seq_along(seq2)),
-          weight = c(weights1, weights2),
-          group = factor(c(rep("reference", length(seq1)), rep("variant", length(seq2))), levels=c("reference","variant"))
-        )
-      }
-      
-      xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
-      
-      p <- ggplot(tbl, aes(pos, weight))
-      if(input$profilePlotDifference) p <- p + geom_hline(yintercept=0, color="dodgerblue")
-      p +
-        geom_line(aes(color=group), size=0.8) +
-        scale_x_continuous(breaks=seq(1, max(tbl$pos)), labels=xlabels) +
-        scale_color_manual(values=c("black", "red")) +
-        mytheme() +
-        theme(
-          legend.title = element_blank(),
-          axis.title.x = element_blank(),
-          axis.text.x = element_text(size=11)
-        ) + labs(y="DeepCLIP score")
-    }
+    makePredictionProfilePlot(x, input$profilePlotDifference)
   }
   
-  output$predictionProfilePlot <- renderPlot(res=100, predictionProfilePlot())
+  output$predictionProfilePlot <- renderPlot(res=100, currentPredictionProfilePlot())
   
-  output$downloadPredictionProfilePlot <- downloadHandler(
-    filename = function() { sprintf("profile_%d.pdf", input$predictionTable_rows_selected[1]) },
-    contentType="application/pdf",
+  output$downloadAllPredictionProfilePlots <- downloadHandler(
+    filename = function() { sprintf("%s_profiles.zip", jobID()) },
+    contentType = "application/zip",
     content=function(file) {
-      p <- predictionProfilePlot()
-      ggsave(plot=p, filename=file, width=10, height=3, units="in")
+      preds <- req(currentPredictions())
+      outfiles <- sapply(seq_along(preds), function(i) {
+        x <- preds[[i]]
+        p <- makePredictionProfilePlot(x, input$profilePlotDifference)
+        if(length(x$variant_id) > 0) {
+          outfile <- tempfile(pattern=sprintf("profile_%d_%s_%s_", i, x$id, x$variant_id), fileext=".pdf")
+        } else {
+          outfile <- tempfile(pattern=sprintf("profile_%d_%s_", i, x$id), fileext=".pdf")
+        }
+        ggsave(outfile, p, width=10, height=3, units="in")
+        outfile
+      })
+      zip(file, outfiles, extras="-j")
+      rm(list=outfiles)
     }
   )
   
