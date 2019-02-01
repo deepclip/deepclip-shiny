@@ -136,7 +136,12 @@ shinyServer(function(input, output, session) {
     options=list(placeholder="Select or search for a model.", render=I(
     '{
       option: function(item, escape) {
-        return "<div><strong>" + escape(item.protein) + ", " + escape(item.method) + "</strong><br>" + escape(item.citation) + "</div>";
+        console.log(item.protein.length);
+        if(item.protein.length > 0) {
+          return "<div><strong>" + escape(item.protein) + ", " + escape(item.method) + "</strong><br>" + escape(item.citation) + "</div>";
+        } else {
+          return "<div class=text-muted>" + escape(item.label) + "</div>";
+        }
       }
     }'
     )
