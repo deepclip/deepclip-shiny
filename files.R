@@ -33,3 +33,11 @@ getGenomeFile <- function(id) {
 getGTFFile <- function(id) {
   paste0(DATA_PATH, "/", id, ".gtf")
 }
+
+getPositiveSequencePath <- function(id) {
+  paste0(RESULTS_PATH, "/", id, "_pos.fa")
+}
+
+getNegativeSequencePath <- function(id) {
+  paste0(RESULTS_PATH, "/", id, "_neg.fa")
+}

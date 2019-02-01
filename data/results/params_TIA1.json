@@ -1,1 +1,0 @@
-{"seq_type":"RNA","seq_format":"fasta","epochs":"300","early_stopping":"30","data_split":[80,10,10],"min_length":1,"max_length":75,"protein":"TIA1","clip_method":"iCLIP","citation":"Wang et al. 2010","seqType":"RNA","num_peaks":" 18549"}

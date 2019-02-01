@@ -1,1 +1,0 @@
-{"seq_type":"RNA","seq_format":"fasta","epochs":"200","early_stopping":"20","data_split":[80,10,10],"min_length":1,"max_length":75,"protein":"AGO2","clip_method":"HITS-CLIP","citation":"Kishore et al. 2011","seqType":"RNA","num_peaks":" 48595"}

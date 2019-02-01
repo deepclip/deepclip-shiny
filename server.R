@@ -136,7 +136,12 @@ shinyServer(function(input, output, session) {
     options=list(placeholder="Select or search for a model.", render=I(
     '{
       option: function(item, escape) {
-        return "<div><strong>" + escape(item.protein) + ", " + escape(item.method) + "</strong><br>" + escape(item.citation) + "</div>";
+        console.log(item.protein.length);
+        if(item.protein.length > 0) {
+          return "<div><strong>" + escape(item.protein) + ", " + escape(item.method) + "</strong><br>" + escape(item.citation) + "</div>";
+        } else {
+          return "<div class=text-muted>" + escape(item.label) + "</div>";
+        }
       }
     }'
     )
@@ -338,6 +343,22 @@ shinyServer(function(input, output, session) {
     }
   )
   
+  output$downloadPositiveSequences <- downloadHandler(
+    filename = "pos.fa",
+    contentType = "text/x-fasta",
+    content = function(file) {
+      file.copy(getPositiveSequencePath(jobID()), file)
+    }
+  )
+  
+  output$downloadNegativeSequences <- downloadHandler(
+    filename = "neg.fa",
+    contentType = "text/x-fasta",
+    content = function(file) {
+      file.copy(getNegativeSequencePath(jobID()), file)
+    }
+  )
+  
   output$predictionTable <- renderDT(server=FALSE, {
     preds <- req(currentPredictions())
     tbl <- data.frame(
@@ -424,12 +445,16 @@ shinyServer(function(input, output, session) {
     test_pred.path <- getTestPredictionsPath(jobid)
     log_stdout.path <- getJobLogPath(jobid)
     log_stderr.path <- getJobErrorPath(jobid)
+    out_seq.path <- getPositiveSequencePath(jobid)
+    out_bkg.path <- getNegativeSequencePath(jobid)
     
     args <- c(
       paste0(CODE_PATH, "/DeepCLIP.py"),
       "--runmode", "train",
       "--num_epochs", input$epochs,
       "--sequences", tmpSeqFile,
+      "--write_sequences", out_seq.path,
+      "--write_background_sequences", out_bkg.path,
       "--predict_function_file", predict_fn.path,
       "--test_output_file", test_output.path,
       "--test_predictions_file", test_pred.path,
