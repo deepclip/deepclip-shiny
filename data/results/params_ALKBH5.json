@@ -1,1 +1,0 @@
-{"seq_type":"RNA","seq_format":"fasta","epochs":"500","early_stopping":"50","data_split":[80,10,10],"min_length":1,"max_length":75,"protein":"ALKBH5","clip_method":"PAR-CLIP","citation":"Baltz et al. 2012","seqType":"RNA","num_peaks":"  1347"}

@@ -109,6 +109,10 @@ shinyUI(tagList(
           tabPanel("Summary",
             h2("Model summary"),
             uiOutput("summaryText"),
+            span(style="height:16px; display: block;"),
+            downloadButton("downloadPositiveSequences", "Foreground sequences"),
+            downloadButton("downloadNegativeSequences", "Background sequences"),
+            hr(),
             fluidRow(
               column(width=5,
                 h2("ROC curve"),

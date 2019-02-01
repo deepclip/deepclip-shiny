@@ -1,1 +1,0 @@
-{"seq_type":"RNA","seq_format":"fasta","epochs":" 50","early_stopping":" 5","data_split":[80,10,10],"min_length":1,"max_length":75,"protein":"TDP43","clip_method":"iCLIP","citation":"Tollervey et al. 2011","seqType":"RNA","num_peaks":" 92531"}

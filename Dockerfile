@@ -13,7 +13,8 @@ RUN /bin/bash setup.sh
 
 RUN mkdir /srv/deepclip /srv/deepclip/code /srv/deepclip/results
 COPY deepclip/*.py /srv/deepclip/code/
-COPY data/results/ /srv/deepclip/results/
+COPY data/results.tar.gz results.tar.gz
+RUN tar xvfz results.tar.gz -C /srv/deepclip/results/
 COPY data/models/ /srv/deepclip/models/
 COPY deepclip.db /srv/deepclip/deepclip.db
 RUN chown -R shiny:shiny /srv/deepclip && usermod -a -G shiny root && usermod -a -G shiny shiny && chmod -R g+rw /srv/deepclip
