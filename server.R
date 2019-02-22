@@ -460,8 +460,8 @@ shinyServer(function(input, output, session) {
       "--test_predictions_file", test_pred.path,
       "--predict_PFM_file", predict_pfm.path,
       "--data_split", data_split / 100,
-      if(!is.null(random_seed)) c("--random_seed", random_seed),
-      if(!is.null(input$early_stopping)) c("--early_stopping", input$earlyStopping),
+      if(isTruthy(random_seed)) c("--random_seed", random_seed),
+      if(isTruthy(input$early_stopping)) c("--early_stopping", input$early_stopping),
       if(input$seqFormat == "bed") {
         c(
           "--force_bed",
@@ -476,7 +476,7 @@ shinyServer(function(input, output, session) {
       if(isTruthy(input$bedWidth)) c("--bed_width", input$bedWidth),
       if(isTruthy(input$bedPadding)) c("--bed_padding", input$bedPadding)
     )
-    
+      
     parallel::mcparallel({
       status <- system2(
         PYTHON_PATH, args,
@@ -493,7 +493,7 @@ shinyServer(function(input, output, session) {
     
     params <- list(
       seq_type = input$seqType, seq_format = input$seqFormat, seq_assembly = input$seqAssembly,
-      epochs = input$epochs, early_stopping = input$earlyStopping,
+      epochs = input$epochs, early_stopping = input$early_stopping,
       data_split = data_split, random_seed = random_seed,
       min_length = input$minLength, max_length = input$maxLength,
       bed_width = input$bedWidth, bed_padding = input$bedPadding
