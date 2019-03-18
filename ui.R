@@ -90,7 +90,7 @@ shinyUI(tagList(
         makeTitledPanel("Program control",
           fluidRow(
             column(width=4, sliderInput("epochs", "Training time", min=1, max=25, value=10, step=1, post = " epochs")),
-            column(width=3, numericInput("earlyStopping", "Early stopping", min=1, max=25, value=NA, step=1)),
+            column(width=3, numericInput("early_stopping", "Early stopping", min=1, max=25, value=NA, step=1)),
             column(width=3, textInput("randomSeed", "Random seed", value="", placeholder="An integer seed"))
           )
         ),
