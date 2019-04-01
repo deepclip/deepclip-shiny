@@ -2,4 +2,4 @@
 openmp=True
 
 [blas]
-ldflags='-L/usr/lib -lblas'
+ldflags=-L/usr/lib -lblas
