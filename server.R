@@ -154,11 +154,10 @@ shinyServer(function(input, output, session) {
       if(length(params$citation) > 0) tagList(strong("Citation: "), params$citation, br()),
       if(length(params$clip_method) > 0) tagList(strong("CLIP method: "), params$clip_method, br()),
       if(length(params$num_peaks) > 0) tagList(strong("Number of peaks: "), params$num_peaks, br()),
-      strong("Sequence type: "), params$seq_type, br(),
       if(length(params$random_seed) > 0) tagList(strong("Random seed: "), params$random_seed, br()),
       strong("Num. epochs: "), params$epochs, br(),
       if(!is.null(params$early_stopping)) tagList(strong("Early stopping: "), params$early_stopping, br()),
-      strong("Data split: "), paste0(c("Training: ", "validation: ", "testing: "), params$data_split, "%", collapse=", ")
+      strong("Data split: "), tags$ul(lapply(paste0(c("Training: ", "Validation: ", "Testing: "), params$data_split, "%"), tags$li))
     )
   })
   
@@ -492,7 +491,7 @@ shinyServer(function(input, output, session) {
     }, detached=TRUE)
     
     params <- list(
-      seq_type = input$seqType, seq_format = input$seqFormat, seq_assembly = input$seqAssembly,
+      seq_type = "RNA", seq_format = input$seqFormat, seq_assembly = input$seqAssembly,
       epochs = input$epochs, early_stopping = input$early_stopping,
       data_split = data_split, random_seed = random_seed,
       min_length = input$minLength, max_length = input$maxLength,

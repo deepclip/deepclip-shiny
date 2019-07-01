@@ -38,11 +38,8 @@ shinyUI(tagList(
         makeTitledPanel("Binding sequences",
           p("Select how binding sequences will be provided. If BED file is selected, a target species and assembly must be selected as well."),
           fluidRow(
-            column(width=2,
-              radioButtons("seqType", "Sequence type", c("DNA"="DNA", "RNA"="RNA"), inline=TRUE)
-            ),
             column(width=3, selectInput("seqFormat", "File format", c("FASTA file"="fasta", "BED file"="bed"))),
-            column(width=3, fileInput("seqFile", "Sequence file")),
+            column(width=4, fileInput("seqFile", "Sequence file")),
             conditionalPanel("input.seqFormat == 'bed'",
               column(width=3, selectInput("seqAssembly", "Assembly", REFERENCE_SPECIES))
             )
@@ -60,7 +57,7 @@ shinyUI(tagList(
               selectInput("bkgSource", "Data source", c("FASTA file"="fasta", "Generate from BED file"="bed", "Shuffle input"="shuffle"))
             ),
             conditionalPanel("input.bkgSource == 'fasta'",
-              column(width=3, fileInput("bkgFile", "FASTA file"))
+              column(width=4, fileInput("bkgFile", "FASTA file"))
             )
           )
         ),
