@@ -3,6 +3,7 @@ MAINTAINER Simon J. Larsen "simonhffh@gmail.com"
 
 EXPOSE 3838
 
+RUN apt-get update
 RUN apt-get install -y python2.7 python-pip sqlite3 git
 
 COPY install_depends.R install_depends.R
