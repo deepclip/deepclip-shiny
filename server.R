@@ -192,7 +192,7 @@ shinyServer(function(input, output, session) {
       geom_step() +
       labs(x="False positive rate", y="True positive rate") +
       geom_abline(intercept=0, slope=1, linetype="dashed", color="#404040") +
-      ggtitle(paste0("AUROC: ", formatC(data$auroc, digits=2))) +
+      ggtitle(sprintf("AUROC: %.4f", data$auroc, digits=4)) +
       mytheme()
   }
   
