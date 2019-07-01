@@ -132,21 +132,6 @@ shinyServer(function(input, output, session) {
   })
   outputOptions(output, "hasPredictions", suspendWhenHidden=FALSE)
   
-  updateSelectizeInput(session, "pretrainedModel", choices=PRETRAINED_MODELS, server=TRUE,
-    options=list(placeholder="Select or search for a model.", render=I(
-    '{
-      option: function(item, escape) {
-        console.log(item.protein.length);
-        if(item.protein.length > 0) {
-          return "<div><strong>" + escape(item.protein) + ", " + escape(item.method) + "</strong><br>" + escape(item.citation) + "</div>";
-        } else {
-          return "<div class=text-muted>" + escape(item.label) + "</div>";
-        }
-      }
-    }'
-    )
-  ))
-  
   output$summaryText <- renderUI({
     params <- jsonlite::read_json(getParamsPath(jobID()))
     tagList(
@@ -392,12 +377,19 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  observeEvent(input$usePretrainedButton, {
-    if(input$pretrainedModel == "") {
-      alert("Please select a model from the menu.")
-      return()
-    }
-    session$sendCustomMessage("redirectJob", input$pretrainedModel)
+  output$pretrainedModelTable <- renderUI({
+    buttons <- sprintf('<a href="/?jobid=%s" class="btn btn-xs btn-primary"><i class="fa fa-upload"></i> Use model</a>', PRETRAINED_MODELS$value[-1])
+    cn <- c("", colnames(PRETRAINED_MODELS[,-(1:2)]))
+    tagList(
+      renderDT(datatable(
+        cbind(use=buttons, PRETRAINED_MODELS[-1,-(1:2)]),
+        rownames=FALSE,
+        colnames=cn,
+        escape=FALSE,
+        selection="none",
+        options = list(columnDefs = list(list(orderable=FALSE, targets=0)))
+      ))
+    )
   })
   
   observeEvent(input$trainButton, {

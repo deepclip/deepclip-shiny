@@ -24,17 +24,10 @@ shinyUI(tagList(
   includeCSS("www/css/loader.css"),
   useShinyjs(),
   div(id="loading-content", h2("Loading..."), div(class="loader", "Loading")),
-  navbarPage(windowTitle="DeepCLIP", "DeepCLIP", fluid=FALSE, inverse=TRUE, footer=makeFooter(),
-    tabPanel(tagList(icon("window-maximize"), "Dashboard"),
+  navbarPage(windowTitle="DeepCLIP", a("DeepCLIP", href="/"), fluid=FALSE, inverse=TRUE, footer=makeFooter(),
+    tabPanel(tagList(icon("cog"), "Train model"),
       conditionalPanel("output.jobID == null",
-        div(class="page-header", h1("Use pre-trained model")),
-        makeTitledPanel("Pre-trained model",
-          fluidRow(
-            column(width=4, selectInput("pretrainedModel", NULL, NULL, width="100%")),
-            column(width=3, actionButton("usePretrainedButton", "Use pre-trained model", class="btn-primary"))
-          )
-        ),
-        div(class="page-header", h1("Train new model")),
+        div(class="page-header", h1("Train model")),
         makeTitledPanel("Binding sequences",
           p("Select how binding sequences will be provided. If BED file is selected, a target species and assembly must be selected as well."),
           fluidRow(
@@ -170,6 +163,10 @@ shinyUI(tagList(
         h3("Log"),
         verbatimTextOutput("jobLog")
       )
+    ),
+    tabPanel(tagList(icon("database"), "Pre-trained models"),
+      div(class="page-header", h1("Pre-trained models")),
+      uiOutput("pretrainedModelTable")
     ),
     tabPanel(tagList(icon("book"), "Documentation"),
        div(class="page-header", h1("Documentation")),

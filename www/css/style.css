@@ -74,6 +74,14 @@
   margin-top: 0;
 }
 
+.navbar-brand a {
+  color: #dedede;
+}
+
+.navbar-inverse .navbar-nav > li > a {
+  color: #dedede;
+}
+
 #model_tabs li {
   min-width: 150px;
   text-align: center;
