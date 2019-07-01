@@ -317,16 +317,19 @@ shinyServer(function(input, output, session) {
     contentType = "application/zip",
     content = function(file) {
       preds <- req(currentPredictions())
-      outfiles <- sapply(seq_along(preds), function(i) {
-        x <- preds[[i]]
-        p <- makePredictionProfilePlot(x, input$profilePlotDifference)
-        if(length(x$variant_id) > 0) {
-          outfile <- tempfile(pattern=sprintf("profile_%d_%s_%s_", i, x$id, x$variant_id), fileext=".pdf")
-        } else {
-          outfile <- tempfile(pattern=sprintf("profile_%d_%s_", i, x$id), fileext=".pdf")
-        }
-        ggsave(outfile, p, width=10, height=3, units="in")
-        outfile
+      withProgress(message="Generating profile plots", min=0, max=length(preds), value=0, {
+        outfiles <- sapply(seq_along(preds), function(i) {
+          x <- preds[[i]]
+          p <- makePredictionProfilePlot(x, input$profilePlotDifference)
+          if(length(x$variant_id) > 0) {
+            outfile <- tempfile(pattern=sprintf("profile_%d_%s_%s_", i, x$id, x$variant_id), fileext=".pdf")
+          } else {
+            outfile <- tempfile(pattern=sprintf("profile_%d_%s_", i, x$id), fileext=".pdf")
+          }
+          ggsave(outfile, p, width=10, height=3, units="in")
+          setProgress(value=i)
+          outfile
+        })
       })
       zip(file, outfiles, extras="-j")
       rm(list=outfiles)
