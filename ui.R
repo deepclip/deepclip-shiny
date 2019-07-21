@@ -142,6 +142,7 @@ shinyUI(tagList(
                 )
               )
             ),
+            materialSwitch("predictLong", "Enable long sequence prediction mode.", value=FALSE, inline=TRUE, status="primary"),
             actionButton("predictButton", "Run prediction", class="btn-lg btn-primary"),
             h3("Predictions"),
             conditionalPanel("output.hasPredictions == true",

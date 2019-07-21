@@ -35,9 +35,9 @@ getGTFFile <- function(id) {
 }
 
 getPositiveSequencePath <- function(id) {
-  paste0(RESULTS_PATH, "/", id, "_pos.fa")
+  paste0(RESULTS_PATH, "/seq_pos_", id, ".fa")
 }
 
 getNegativeSequencePath <- function(id) {
-  paste0(RESULTS_PATH, "/", id, "_neg.fa")
+  paste0(RESULTS_PATH, "/seq_neg_", id, ".fa")
 }

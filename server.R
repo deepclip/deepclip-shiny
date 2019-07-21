@@ -44,12 +44,18 @@ copyTempFile <- function(path, name) {
   tmpfile
 }
 
-checkValidFasta <- function(text) {
-  if(!startsWith(text, ">")) return(FALSE)
-  first_nl <- regexpr("\n", text)[1]
-  if(first_nl == -1) return(FALSE)
-  if(!tolower(substring(text, first_nl+1, first_nl+1)) %in% c("a","c","g","t","u")) return(FALSE)
-  return(TRUE)
+checkValidFasta <- function(path, description, max.length=Inf) {
+  tryCatch({
+    x <- Biostrings::readDNAStringSet(path, format="fasta")
+    if(any(x@ranges@width > max.length)) {
+      alert(paste0(description, " contains one or more sequence(s) exceeding max. sequence length."))
+      return(FALSE)
+    }
+    return(TRUE)
+  }, error=function(e) {
+    alert(paste0(description, " is not valid FASTA format."))
+    return(FALSE)
+  })
 }
 
 makePredictionProfilePlot <- function(x, plot_difference) {
@@ -142,6 +148,7 @@ shinyServer(function(input, output, session) {
       if(length(params$random_seed) > 0) tagList(strong("Random seed: "), params$random_seed, br()),
       strong("Num. epochs: "), params$epochs, br(),
       if(!is.null(params$early_stopping)) tagList(strong("Early stopping: "), params$early_stopping, br()),
+      strong("Max. sequence length: "), paste0(params$max_length, " bp"), br(),
       strong("Data split: "), tags$ul(lapply(paste0(c("Training: ", "Validation: ", "Testing: "), params$data_split, "%"), tags$li))
     )
   })
@@ -428,6 +435,9 @@ shinyServer(function(input, output, session) {
       }
     }
     
+    if(!checkValidFasta(input$seqFile$datapth, "Binding sequence file")) return()
+    if(isTruthy(input$bkgFile) && !checkValidFasta(input$bkgFile$datapath, "Background sequence file")) return()
+    
     tmpSeqFile <- copyTempFile(input$seqFile$datapath, input$seqFile$name)
     tmpBkgFile <- if(isTruthy(input$bkgFile)) copyTempFile(input$bkgFile$datapath, input$bkgFile$name)
     
@@ -508,31 +518,29 @@ shinyServer(function(input, output, session) {
       return()
     }
     
+    params <- jsonlite::read_json(getParamsPath(jobID()))
+    
     withProgress({
       setProgress(value=0.1, message="Preparing data")
       
       seqfile1 <- tempfile(fileext=".fa")
       seqfile2 <- tempfile(fileext=".fa")
       if(input$predictSeqText != "") {
-        if(!checkValidFasta(input$predictSeqText)) {
-          addClass("predictSeqPanel", "has-error")
-          alert("Sequences provided in left text area is not in valid FASTA format.")
-          return()
-        }
         write(input$predictSeqText, file=seqfile1)
+        if(!checkValidFasta(seqfile1, "Sequence file", max.length=params$max_length)) return()
       } else {
         file.copy(input$predictSeq$datapath, seqfile1)
+        if(!checkValidFasta(seqfile1, "Sequence text area", max.length=params$max_length)) return()
       }
+      
       if(input$predictPaired) {
         if(input$predictSeqText2 != "") {
-          if(!checkValidFasta(input$predictSeqText2)) {
-            alert("Sequences provided in right text area is not valid FASTA format.")
-            return()
-          }
           write(input$predictSeqText2, file=seqfile2)
+          if(!checkValidFasta(seqfile2, "Paired sequence file", max.length=params$max_length)) return()
         }
         else if(isTruthy(input$predictSeq2)) {
           file.copy(input$predictSeq2$datapath, seqfile2)
+          if(!checkValidFasta(seqfile2, "Paired sequence text area", max.length=params$max_length)) return()
         }
       }
       
