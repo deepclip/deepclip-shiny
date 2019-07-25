@@ -1,28 +1,28 @@
 id,protein,method,citation,alias,doi
-AGO1-4,AGO1-4,PAR-CLIP,Hafner et al. 2010,"AGO1, EIF2C, EIF2C1, GERP95, Q99, hAgo1, argonaute RISC catalytic component 1",
-AGO2,AGO2,HITS-CLIP,Kishore et al. 2011,"EIF2C2, argonaute RISC catalytic component 2, LINC00980, EIF-2C, EIF2C, CASC7, HAgo2, Q10",
-ALKBH5,ALKBH5,PAR-CLIP,Baltz et al. 2012,"ALKBH5, ABH5, OFOXD, OFOXD1, alkB homolog 5, RNA demethylase",
-C17ORF85,C17ORF85,PAR-CLIP,Baltz et al. 2012,"NCBP3, Nuclear Cap Binding Subunit 3, ELG, HSA277841",
-C22ORF28,C22ORF28,PAR-CLIP,Baltz et al. 2012,"RTCB, HSPC117, FAAP, Chromosome 22 Open Reading Frame, Ankyrin Repeat Domain 54",
-CAPRIN1,CAPRIN1,PAR-CLIP,Baltz et al. 2012,"CAPRIN1, GPIAP1, GPIP137, GRIP137, M11S1, RNG105, p137GPI, cell cycle associated protein 1",
-ELAVL1,ELAVL1,HITS-CLIP,Kishore et al. 2011,"ELAVL1, ELAV1, HUR, Hua, MelG, ELAV like RNA binding protein 1",
-ELAVL1A,ELAVL1(A),PAR-CLIP,Kishore et al. 2011,"ELAVL1, ELAV1, HUR, Hua, MelG, ELAV like RNA binding protein 1",
-ELAVL1B,ELAVL1(B),PAR-CLIP,Lebedeva et al. 2011,"ELAVL1, ELAV1, HUR, Hua, MelG, ELAV like RNA binding protein 1",
-EWSR1,EWSR1,PAR-CLIP,Hoell et al. 2011,"EWS RNA Binding Protein 1, EWS Oncogene, BK984G1.4, EWS-FLI1",
-FUS,FUS,PAR-CLIP,Hoell et al. 2011,"FUS RNA Binding Protein, Amyotrophic Lateral Sclerosis 6, HNRNPP2, POMP75, TLS, ETM4, FUS1, ALS6",
-hnRNPA1,hnRNPA1,iCLIP,Bruun et al. 2016,"HNRNPA1, ALS19, ALS20, HNRPA1, HNRPA1L3, IBMPFD3, hnRNP A1, hnRNP-A1, UP 1, heterogeneous nuclear ribonucleoprotein A1",
-hnRNPC,hnRNPC,iCLIP,König et al. 2010,"HNRNPC, C1, C2, HNRNP, HNRPC, SNRPC, heterogeneous nuclear ribonucleoprotein C (C1/C2)",
-HuR,HuR,PAR-CLIP,Mukherjee et al. 2011,"ELAVL1, ELAV1, HUR, Hua, MelG, ELAV like RNA binding protein 1",
-IGF2BP1-3,IGF2BP1-3,PAR-CLIP,Hafner et al. 2010,"IGF2BP1, CRD-BP, CRDBP, IMP-1, IMP1, VICKZ1, ZBP1, insulin like growth factor 2 mRNA binding protein 1",
-MOV10,MOV10,PAR-CLIP,Sievers et al. 2012,"MOV10, fSAP113, gb110, Mov10 RISC complex RNA helicase",
-PTBP1,PTBP1,HITS-CLIP,Xue et al. 2009,"PTBP1, HNRNP-I, HNRNPI, HNRPI, PTB, PTB-1, PTB-T, PTB2, PTB3, PTB4, pPTB, polypyrimidine tract binding protein 1",
-PUM2,PUM2,PAR-CLIP,Hafner et al. 2010,"PUM2, PUMH2, PUML2, pumilio RNA binding family member 2",
-QKI,QKI,PAR-CLIP,Hafner et al. 2010,"QKI, Hqk, QK, QK1, QK3, hqkI, KH domain containing, RNA binding, KH domain containing RNA binding",
-SRSF1,SRSF1,HITS-CLIP,Sanford et al. 2009,"SRSF1, ASF, SF2, SF2p33, SFRS1, SRp30a, ASF/SF2, serine/arginine-rich splicing factor 1, serine and arginine rich splicing factor 1",
-SRSF1-2,SRSF1,???,Von Nostrand et al. 2016,"SRSF1, ASF, SF2, SF2p33, SFRS1, SRp30a, ASF/SF2, serine/arginine-rich splicing factor 1, serine and arginine rich splicing factor 1",
-TAF15,TAF15,PAR-CLIP,Hoell et al. 2011,"TAF15, Npl3, RBP56, TAF2N, TAFII68, TATA-box binding protein associated factor 15",
-TDP43,TDP43,iCLIP,Tollervey et al. 2011,"TARDBP, ALS10, TDP-43, TAR DNA binding protein",
-TDP43-2,TDP43,???,Zhu et al. 2019,"TARDBP, ALS10, TDP-43, TAR DNA binding protein",10.1093/nar/gky830
-TIA1,TIA1,iCLIP,Wang et al. 2010,"TIA1 Cytotoxic Granule Associated RNA Binding Protein, Nucleolysin, P40-TIA-1, WDM",
-TIAL1,TIAL1,iCLIP,Wang et al. 2010,"TIAL1, TCBP, TIAR, TIA1 cytotoxic granule-associated RNA binding protein-like 1, TIA1 cytotoxic granule associated RNA binding protein like 1",
-ZC3H7B,ZC3H7B,PAR-CLIP,Baltz et al. 2012,"ZC3H7B, RoXaN, zinc finger CCCH-type containing 7B, ROXAN1",
+AGO1-4,AGO1-4,PAR-CLIP,Hafner et al. 2010,"AGO1, EIF2C, EIF2C1, GERP95, Q99, hAgo1, argonaute RISC catalytic component 1",10.1016/j.cell.2010.03.009
+AGO2,AGO2,HITS-CLIP,Kishore et al. 2011,"EIF2C2, argonaute RISC catalytic component 2, LINC00980, EIF-2C, EIF2C, CASC7, HAgo2, Q10",10.1038/nmeth.1608
+ALKBH5,ALKBH5,PAR-CLIP,Baltz et al. 2012,"ALKBH5, ABH5, OFOXD, OFOXD1, alkB homolog 5, RNA demethylase",10.1016/j.molcel.2012.05.021
+C17ORF85,C17ORF85,PAR-CLIP,Baltz et al. 2012,"NCBP3, Nuclear Cap Binding Subunit 3, ELG, HSA277841",10.1016/j.molcel.2012.05.021
+C22ORF28,C22ORF28,PAR-CLIP,Baltz et al. 2012,"RTCB, HSPC117, FAAP, Chromosome 22 Open Reading Frame, Ankyrin Repeat Domain 54",10.1016/j.molcel.2012.05.021
+CAPRIN1,CAPRIN1,PAR-CLIP,Baltz et al. 2012,"CAPRIN1, GPIAP1, GPIP137, GRIP137, M11S1, RNG105, p137GPI, cell cycle associated protein 1",10.1016/j.molcel.2012.05.021
+ELAVL1,ELAVL1,HITS-CLIP,Kishore et al. 2011,"ELAVL1, ELAV1, HUR, Hua, MelG, ELAV like RNA binding protein 1",10.1038/nmeth.1608
+ELAVL1A,ELAVL1(A),PAR-CLIP,Kishore et al. 2011,"ELAVL1, ELAV1, HUR, Hua, MelG, ELAV like RNA binding protein 1",10.1038/nmeth.1608
+ELAVL1B,ELAVL1(B),PAR-CLIP,Lebedeva et al. 2011,"ELAVL1, ELAV1, HUR, Hua, MelG, ELAV like RNA binding protein 1",10.1016/j.molcel.2011.06.008
+EWSR1,EWSR1,PAR-CLIP,Hoell et al. 2011,"EWS RNA Binding Protein 1, EWS Oncogene, BK984G1.4, EWS-FLI1",10.1038/nsmb.2163
+FUS,FUS,PAR-CLIP,Hoell et al. 2011,"FUS RNA Binding Protein, Amyotrophic Lateral Sclerosis 6, HNRNPP2, POMP75, TLS, ETM4, FUS1, ALS6",10.1038/nsmb.2163
+hnRNPA1,hnRNPA1,iCLIP,Bruun et al. 2016,"HNRNPA1, ALS19, ALS20, HNRPA1, HNRPA1L3, IBMPFD3, hnRNP A1, hnRNP-A1, UP 1, heterogeneous nuclear ribonucleoprotein A1",10.1186/s12915-016-0279-9
+hnRNPC,hnRNPC,iCLIP,König et al. 2010,"HNRNPC, C1, C2, HNRNP, HNRPC, SNRPC, heterogeneous nuclear ribonucleoprotein C (C1/C2)",10.1038/nsmb.1838
+HuR,HuR,PAR-CLIP,Mukherjee et al. 2011,"ELAVL1, ELAV1, HUR, Hua, MelG, ELAV like RNA binding protein 1",10.1016/j.molcel.2011.06.007
+IGF2BP1-3,IGF2BP1-3,PAR-CLIP,Hafner et al. 2010,"IGF2BP1, CRD-BP, CRDBP, IMP-1, IMP1, VICKZ1, ZBP1, insulin like growth factor 2 mRNA binding protein 1",10.1016/j.cell.2010.03.009
+MOV10,MOV10,PAR-CLIP,Sievers et al. 2012,"MOV10, fSAP113, gb110, Mov10 RISC complex RNA helicase",10.1093/nar/gks697
+PTBP1,PTBP1,HITS-CLIP,Xue et al. 2009,"PTBP1, HNRNP-I, HNRNPI, HNRPI, PTB, PTB-1, PTB-T, PTB2, PTB3, PTB4, pPTB, polypyrimidine tract binding protein 1",10.1016/j.molcel.2009.12.003
+PUM2,PUM2,PAR-CLIP,Hafner et al. 2010,"PUM2, PUMH2, PUML2, pumilio RNA binding family member 2",10.1016/j.cell.2010.03.009
+QKI,QKI,PAR-CLIP,Hafner et al. 2010,"QKI, Hqk, QK, QK1, QK3, hqkI, KH domain containing, RNA binding, KH domain containing RNA binding",10.1016/j.cell.2010.03.009
+SRSF1,SRSF1,HITS-CLIP,Sanford et al. 2009,"SRSF1, ASF, SF2, SF2p33, SFRS1, SRp30a, ASF/SF2, serine/arginine-rich splicing factor 1, serine and arginine rich splicing factor 1",10.1101/gr.082503.108
+SRSF1-2,SRSF1,eCLIP,Von Nostrand et al. 2016,"SRSF1, ASF, SF2, SF2p33, SFRS1, SRp30a, ASF/SF2, serine/arginine-rich splicing factor 1, serine and arginine rich splicing factor 1",10.1038/nmeth.3810
+TAF15,TAF15,PAR-CLIP,Hoell et al. 2011,"TAF15, Npl3, RBP56, TAF2N, TAFII68, TATA-box binding protein associated factor 15",10.1038/nsmb.2163
+TDP43,TDP43,iCLIP,Tollervey et al. 2011,"TARDBP, ALS10, TDP-43, TAR DNA binding protein",10.1093/nar/gky830
+TDP43-2,TDP43,"eCLIP, iCLIP, PAR-CLIP",Zhu et al. 2019,"TARDBP, ALS10, TDP-43, TAR DNA binding protein",10.1093/nar/gky830
+TIA1,TIA1,iCLIP,Wang et al. 2010,"TIA1 Cytotoxic Granule Associated RNA Binding Protein, Nucleolysin, P40-TIA-1, WDM",10.1371/journal.pbio.1000530
+TIAL1,TIAL1,iCLIP,Wang et al. 2010,"TIAL1, TCBP, TIAR, TIA1 cytotoxic granule-associated RNA binding protein-like 1, TIA1 cytotoxic granule associated RNA binding protein like 1",10.1371/journal.pbio.1000530
+ZC3H7B,ZC3H7B,PAR-CLIP,Baltz et al. 2012,"ZC3H7B, RoXaN, zinc finger CCCH-type containing 7B, ROXAN1",10.1016/j.molcel.2012.05.021
