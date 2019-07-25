@@ -387,15 +387,16 @@ shinyServer(function(input, output, session) {
   output$pretrainedModelTable <- renderUI({
     buttons <- sprintf('<a href="/?jobid=%s" class="btn btn-sm btn-primary"><i class="fa fa-upload"></i> Use model</a>', PRETRAINED_MODELS$id)
     citations <- sprintf('<a href="http://doi.org/%s" target="_blank">%s</a>', PRETRAINED_MODELS$doi, PRETRAINED_MODELS$citation)
-    cn <- c("", colnames(PRETRAINED_MODELS[,2:4]))
+    cn <- c("", "protein", "method", "citation", "alias")
     tagList(
       renderDT(server=FALSE, datatable(
-        cbind(use=buttons, PRETRAINED_MODELS[,2:3], citation=citations, alias=PRETRAINED_MODELS$alias),
+        cbind(buttons, PRETRAINED_MODELS[,2:3], citations, PRETRAINED_MODELS$alias),
         rownames=FALSE,
         colnames=cn,
         escape=FALSE,
         selection="none",
         options = list(
+          paging = FALSE,
           columnDefs = list(
             list(targets=0, orderable=FALSE),
             list(targets=4, visible=FALSE)
