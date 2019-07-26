@@ -18,11 +18,12 @@ COPY data/results.tar.gz results.tar.gz
 RUN tar xvfz results.tar.gz -C /srv/deepclip/results/
 COPY data/models/ /srv/deepclip/models/
 COPY deepclip.db /srv/deepclip/deepclip.db
+COPY pretrained_models.csv /srv/deepclip/pretrained_models.csv
 RUN chown -R shiny:shiny /srv/deepclip && usermod -a -G shiny root && usermod -a -G shiny shiny && chmod -R g+rw /srv/deepclip
 
 COPY *.R *.md /srv/shiny-server/
 COPY www/ /srv/shiny-server/www/
-COPD data/example/ /srv/shiny-server/data/example/
+COPY data/example/ /srv/shiny-server/data/example/
 
 COPY .theanorc /home/shiny/.theanorc
 COPY .theanorc /root/.theanorc
