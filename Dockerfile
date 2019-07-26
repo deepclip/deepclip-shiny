@@ -22,6 +22,7 @@ RUN chown -R shiny:shiny /srv/deepclip && usermod -a -G shiny root && usermod -a
 
 COPY *.R *.md /srv/shiny-server/
 COPY www/ /srv/shiny-server/www/
+COPD data/example/ /srv/shiny-server/data/example/
 
 COPY .theanorc /home/shiny/.theanorc
 COPY .theanorc /root/.theanorc

@@ -53,7 +53,7 @@ checkValidFasta <- function(path, description, max.length=Inf) {
     }
     return(TRUE)
   }, error=function(e) {
-    alert(paste0(description, " is not valid FASTA format."))
+    alert(paste0(description, " is not valid FASTA format. ", e))
     return(FALSE)
   })
 }
@@ -151,6 +151,11 @@ shinyServer(function(input, output, session) {
       strong("Max. sequence length: "), paste0(params$max_length, " bp"), br(),
       strong("Data split: "), tags$ul(lapply(paste0(c("Training: ", "Validation: ", "Testing: "), params$data_split, "%"), tags$li))
     )
+  })
+  
+  output$summaryTextPred <- renderUI({
+    params <- jsonlite::read_json(getParamsPath(jobID()))
+    div(strong(paste0("Max. sequence length: ", params$max_length, " bp")), style="margin:16px 0 0 16px;")
   })
   
   output$jobLog <- renderText({
@@ -358,7 +363,7 @@ shinyServer(function(input, output, session) {
     tbl <- data.frame(
       id = sapply(preds, "[[", "id"),
       seq = sapply(preds, "[[", "sequence"),
-      score = sapply(preds, "[[", "score")
+      score = if(!is.null(preds[[1]][["score"]])) sapply(preds, "[[", "score") else rep(NA, length(preds))
     )
     if(!is.null(preds[[1]][["variant_sequence"]])) {
       tbl <- cbind(tbl, data.frame(
@@ -442,7 +447,7 @@ shinyServer(function(input, output, session) {
       }
     }
     
-    if(!checkValidFasta(input$seqFile$datapth, "Binding sequence file")) return()
+    if(!checkValidFasta(input$seqFile$datapath, "Binding sequence file")) return()
     if(isTruthy(input$bkgFile) && !checkValidFasta(input$bkgFile$datapath, "Background sequence file")) return()
     
     tmpSeqFile <- copyTempFile(input$seqFile$datapath, input$seqFile$name)
@@ -524,8 +529,13 @@ shinyServer(function(input, output, session) {
       alert("Please provide a variant sequence file or paste your variant sequences in the text area.")
       return()
     }
+    if(input$predictPaired && input$predictLong) {
+      alert("Long sequence mode cannot be used for paired sequence prediction.");
+      return()
+    }
     
     params <- jsonlite::read_json(getParamsPath(jobID()))
+    max_length <- if(input$predictLong) 9999999 else input$maxLength
     
     withProgress({
       setProgress(value=0.1, message="Preparing data")
@@ -534,20 +544,20 @@ shinyServer(function(input, output, session) {
       seqfile2 <- tempfile(fileext=".fa")
       if(input$predictSeqText != "") {
         write(input$predictSeqText, file=seqfile1)
-        if(!checkValidFasta(seqfile1, "Sequence file", max.length=params$max_length)) return()
+        if(!checkValidFasta(seqfile1, "Sequence file", max.length=max_length)) return()
       } else {
         file.copy(input$predictSeq$datapath, seqfile1)
-        if(!checkValidFasta(seqfile1, "Sequence text area", max.length=params$max_length)) return()
+        if(!checkValidFasta(seqfile1, "Sequence text area", max.length=max_length)) return()
       }
       
       if(input$predictPaired) {
         if(input$predictSeqText2 != "") {
           write(input$predictSeqText2, file=seqfile2)
-          if(!checkValidFasta(seqfile2, "Paired sequence file", max.length=params$max_length)) return()
+          if(!checkValidFasta(seqfile2, "Paired sequence file", max.length=max_length)) return()
         }
         else if(isTruthy(input$predictSeq2)) {
           file.copy(input$predictSeq2$datapath, seqfile2)
-          if(!checkValidFasta(seqfile2, "Paired sequence text area", max.length=params$max_length)) return()
+          if(!checkValidFasta(seqfile2, "Paired sequence text area", max.length=max_length)) return()
         }
       }
       
@@ -557,7 +567,7 @@ shinyServer(function(input, output, session) {
       
       args <- c(
         paste0(CODE_PATH, "/DeepCLIP.py"),
-        "--runmode", "predict",
+        "--runmode", if(input$predictLong) "predict_long" else "predict",
         "--predict_function_file", predict_fn.path,
         "--sequences", seqfile1,
         if(input$predictPaired) c("--variant_sequences", seqfile2),
@@ -579,6 +589,18 @@ shinyServer(function(input, output, session) {
       
       currentPredictions(data$predictions)
     })
+  })
+  
+  observeEvent(input$useExamplePredictLink, {
+    path <- "data/example/raponi_included.15mer.fa"
+    data <- readChar(path, file.info(path)$size)
+    updateTextAreaInput(session, "predictSeqText", value=data)
+  })
+  
+  observeEvent(input$useExamplePredict2Link, {
+    path <- "data/example/raponi_excluded.15mer.fa"
+    data <- readChar(path, file.info(path)$size)
+    updateTextAreaInput(session, "predictSeqText2", value=data)
   })
   
   session$onFlushed(function() {

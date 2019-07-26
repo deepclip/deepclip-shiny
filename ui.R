@@ -118,13 +118,15 @@ shinyUI(tagList(
             downloadButton("downloadSummaryPlots", "Download all plots", class="btn-primary")
           ),
           tabPanel(HTML("Prediction</a></li><li style='float:right'><a id='startOverButton' href='/' class='btn-primary'><i class='fa fa-refresh'></i> Start over"),
+            uiOutput("summaryTextPred"),
             fluidRow(style="margin-top: 20px;",
               column(width=6,
                 div(class="panel panel-default",
                   div(class="panel-heading", style="height: 45px", "Sequences"),
                   div(class="panel-body",
                     fileInput("predictSeq", "FASTA file"),
-                    textAreaInput("predictSeqText", "Sequences", width="100%")
+                    textAreaInput("predictSeqText", "Sequences", width="100%"),
+                    actionLink("useExamplePredictLink", "Use example sequences")
                   )
                 )
               ),
@@ -136,7 +138,8 @@ shinyUI(tagList(
                   conditionalPanel("input.predictPaired == true",
                     div(class="panel-body",
                       fileInput("predictSeq2", "FASTA file"),
-                      textAreaInput("predictSeqText2", "Sequences", width="100%")
+                      textAreaInput("predictSeqText2", "Sequences", width="100%"),
+                      actionLink("useExamplePredict2Link", "Use example sequences")
                     )
                   )
                 )
@@ -165,7 +168,6 @@ shinyUI(tagList(
         verbatimTextOutput("jobLog")
       )
     ),
-    #tabPanel(tagList(icon("database"), "Pre-trained models"),
     tabPanel(HTML('<i class="fa fa-database"></i> Pre-trained models</a></li><li><a href="https://deepclip.compbio.sdu.dk/guide" target="_blank"><i class="fa fa-book"></i> Guide <i class="fa fa-external-link"></i></a></li>'),
       div(class="page-header", h1("Pre-trained models")),
       uiOutput("pretrainedModelTable")
