@@ -165,17 +165,10 @@ shinyUI(tagList(
         verbatimTextOutput("jobLog")
       )
     ),
-    tabPanel(tagList(icon("database"), "Pre-trained models"),
+    #tabPanel(tagList(icon("database"), "Pre-trained models"),
+    tabPanel(HTML('<i class="fa fa-database"></i> Pre-trained models</a></li><li><a href="https://deepclip.compbio.sdu.dk/guide" target="_blank"><i class="fa fa-book"></i> Guide <i class="fa fa-external-link"></i></a></li>'),
       div(class="page-header", h1("Pre-trained models")),
       uiOutput("pretrainedModelTable")
-    ),
-    tabPanel(tagList(icon("book"), "Documentation"),
-       div(class="page-header", h1("Documentation")),
-       includeMarkdown("documentation.md")
-    ),
-    tabPanel(tagList(icon("info-circle"), "About"),
-      div(class="page-header", h1("About")),
-      includeMarkdown("about.md")
     )
   )
 ))
