@@ -1,7 +1,7 @@
 deepclip-shiny
 ==============
 
-deepclip-shiny is an R shiny web interface for [DeepCLIP](github.com/deepclip/deepclip).
+deepclip-shiny is an R shiny web interface for [DeepCLIP](https://github.com/deepclip/deepclip).
 
 ## Deploying
 
