@@ -1,6 +1,6 @@
 options(shiny.sanitize.errors = TRUE)
 
-VERSION <- "0.1"
+VERSION <- "0.2"
 
 PYTHON_PATH <- "/usr/bin/python2"
 PREFIX <- "/srv/deepclip"
@@ -53,10 +53,10 @@ PRETRAINED_MODELS <- read.csv("pretrained_models.csv", header=TRUE, stringsAsFac
 #"PUM2","PUM2 PAR-CLIP (Hafner et al. 2010)","PUM2","PAR-CLIP","Hafner et al. 2010"
 #"QKI","QKI PAR-CLIP (Hafner et al. 2010)","QKI","PAR-CLIP","Hafner et al. 2010"
 #"SRSF1","SRSF1 HITS-CLIP (Sanford et al. 2009)","SRSF1","HITS-CLIP","Sanford et al. 2009"
-#"SRSF1-2","SRSF1 ??? (Von Nostrand et al. 2016)","SRSF1","???","Von Nostrand et al. 2016"
+#"SRSF1-2","SRSF1 eCLIP (Von Nostrand et al. 2016)","SRSF1","eCLIP","Von Nostrand et al. 2016"
 #"TAF15","TAF15 PAR-CLIP (Hoell et al. 2011)","TAF15","PAR-CLIP","Hoell et al. 2011"
 #"TDP43","TDP43 iCLIP (Tollervey et al. 2011)","TDP43","iCLIP","Tollervey et al. 2011"
-#"TDP43-2","TDP43 ??? (Zhu et al. 2019)","TDP43","???","Zhu et al. 2019"
+#"TDP43-2","TDP43 eCLIP,iCLIP,PAR-CLIP (Zhu et al. 2019)","TDP43","eCLIP,iCLIP,PAR-CLIP","Zhu et al. 2019"
 #"TIA1","TIA1 iCLIP (Wang et al. 2010)","TIA1","iCLIP","Wang et al. 2010"
 #"TIAL1","TIAL1 iCLIP (Wang et al. 2010)","TIAL1","iCLIP","Wang et al. 2010"
 #"ZC3H7B","ZC3H7B PAR-CLIP (Baltz et al. 2012)","ZC3H7B","PAR-CLIP","Baltz et al. 2012"')

@@ -26,7 +26,7 @@ shinyUI(tagList(
   div(id="loading-content", h2("Loading..."), div(class="loader", "Loading")),
   navbarPage(windowTitle="DeepCLIP", a("DeepCLIP", href="/"), fluid=FALSE, inverse=TRUE, footer=makeFooter(),
     tabPanel(tagList(icon("cog"), "Train model"),
-      conditionalPanel("output.jobID == null",
+      conditionalPanel("output.jobID == null & output.jobMulti == null",
         div(class="page-header", h1("Train model")),
         makeTitledPanel("Binding sequences",
           p("Select how binding sequences will be provided. If BED file is selected, a target species and assembly must be selected as well."),
@@ -86,7 +86,53 @@ shinyUI(tagList(
         ),
         actionButton("trainButton", "Train model", class="btn-lg btn-primary")
       ),
-      conditionalPanel("output.jobStatus == 0",
+      conditionalPanel("output.jobMulti != null",
+                       div(class="page-header", h1("Predict with selected models")),
+                       uiOutput("selectedMultiModelTable"),
+                       makeTitledPanel("Multi-prediction",
+                       fluidRow(style="margin-top: 20px;",
+                                column(width=6,
+                                div(class="panel panel-default",
+                                div(class="panel-heading", style="height: 45px", "Sequences"),
+                                div(class="panel-body",
+                                    fileInput("predictMultiSeq", "FASTA file"),
+                                    textAreaInput("predictMultiSeqText", "Sequences", width="100%"),
+                                    actionLink("useMultiExamplePredictLink", "Use example sequences")
+                                    )
+                                )
+                                ),
+                                column(width=6,
+                                       div(class="panel panel-default",
+                                           div(class="panel-heading", style="height: 45px",
+                                               materialSwitch("predictMultiPaired", "Predict paired sequences", FALSE, status="primary")
+                                           ),
+                                           conditionalPanel("input.predictMultiPaired == true",
+                                                            div(class="panel-body",
+                                                                fileInput("predictMultiSeq2", "FASTA file"),
+                                                                textAreaInput("predictMultiSeqText2", "Sequences", width="100%"),
+                                                                actionLink("useExamplePredict2Link", "Use example sequences")
+                                                            )
+                                           )
+                                       )
+                                )
+                       ),
+                       materialSwitch("predictMultiLong", "Enable long sequence prediction mode.", value=FALSE, inline=TRUE, status="primary"),
+                       actionButton("predictMultiButton", "Run predictions", class="btn-lg btn-primary"),
+                       h3("Predictions"),
+                       conditionalPanel("output.hasMultiPredictions == true",
+                                        DTOutput("predictionMultiTable"),
+                                        conditionalPanel("typeof(input.predictionMultiTable_rows_selected) != 'undefined' && input.predictionMultiTable_rows_selected.length > 0",
+                                                         plotOutput("predictionMultiProfilePlot", height=300),
+                                                         conditionalPanel("input.predictMultiPaired == true",
+                                                                         materialSwitch("profileMultiPlotDifference", "Plot profile difference (with variants only)", value=FALSE, inline=TRUE, status="primary")
+                                                         )
+                                        ),
+                                        downloadButton("downloadAllMultiPredictionProfilePlots", "Download profile plots"),
+                                        downloadButton("downloadMultiPredictionData", "Download profile data")
+                                        )
+                       )
+      ),
+      conditionalPanel("output.jobStatus == 0 & output.jobMulti == null",
         div(class="well", id="trainingProgressBox",
           h2("Training model", class="no-top-margin"),
           uiOutput("jobProgressBar"),
@@ -94,7 +140,7 @@ shinyUI(tagList(
           p("You can bookmark this page and come back later.")
         )
       ),
-      conditionalPanel("output.jobStatus == 1",
+      conditionalPanel("output.jobStatus == 1 & output.jobMulti == null",
         tabsetPanel(id="model_tabs",
           tabPanel("Summary",
             h2("Model summary"),
@@ -162,13 +208,25 @@ shinyUI(tagList(
           )
         )
       ),
-      conditionalPanel("output.jobStatus == 2",
+      conditionalPanel("output.jobStatus == 2 & output.jobMulti == null",
         div(class="alert alert-danger", "Model training failed"),
         h3("Log"),
         verbatimTextOutput("jobLog")
       )
     ),
-    tabPanel(HTML('<i class="fa fa-database"></i> Pre-trained models</a></li><li><a href="https://deepclip.compbio.sdu.dk/guide" target="_blank"><i class="fa fa-book"></i> Guide <i class="fa fa-external-link"></i></a></li>'),
+    tabPanel(HTML('<i class="fa fa-tags"></i> Predict using multiple pre-trained models'),
+             pickerInput(
+               inputId = "input_multi_selected_models",
+               label = "Select pre-trained models",
+               choices = PRETRAINED_MODELS$id,
+               multiple = TRUE,
+               options = list(`actions-box` = TRUE)
+             ),
+             actionButton("selectMultiButton", "Use selected models", class="btn-lg btn-primary"),
+             #verbatimTextOutput("read_multi_selected_models"),
+             uiOutput("pretrainedMultiModelTable")
+    ),
+    tabPanel(HTML('<i class="fa fa-tag"></i> Predict using a single pre-trained model</a></li><li><a href="https://deepclip.compbio.sdu.dk/guide" target="_blank"><i class="fa fa-book"></i> Guide <i class="fa fa-external-link"></i></a></li>'),
       div(class="page-header", h1("Pre-trained models")),
       uiOutput("pretrainedModelTable")
     )

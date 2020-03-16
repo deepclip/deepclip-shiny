@@ -21,8 +21,8 @@ QKI,QKI,PAR-CLIP,Hafner et al. 2010,"QKI, Hqk, QK, QK1, QK3, hqkI, KH domain con
 SRSF1,SRSF1,HITS-CLIP,Sanford et al. 2009,"SRSF1, ASF, SF2, SF2p33, SFRS1, SRp30a, ASF/SF2, serine/arginine-rich splicing factor 1, serine and arginine rich splicing factor 1",10.1101/gr.082503.108
 SRSF1-2,SRSF1,eCLIP,Von Nostrand et al. 2016,"SRSF1, ASF, SF2, SF2p33, SFRS1, SRp30a, ASF/SF2, serine/arginine-rich splicing factor 1, serine and arginine rich splicing factor 1",10.1038/nmeth.3810
 TAF15,TAF15,PAR-CLIP,Hoell et al. 2011,"TAF15, Npl3, RBP56, TAF2N, TAFII68, TATA-box binding protein associated factor 15",10.1038/nsmb.2163
-TDP43,TDP43,iCLIP,Tollervey et al. 2011,"TARDBP, ALS10, TDP-43, TAR DNA binding protein",10.1093/nar/gky830
-TDP43-2,TDP43,"eCLIP, iCLIP, PAR-CLIP",Zhu et al. 2019,"TARDBP, ALS10, TDP-43, TAR DNA binding protein",10.1093/nar/gky830
+TDP43,TDP-43,iCLIP,Tollervey et al. 2011,"TARDBP, ALS10, TDP-43, TAR DNA binding protein",10.1093/nar/gky830
+TDP43-2,TDP-43,"eCLIP, iCLIP, PAR-CLIP",Zhu et al. 2019,"TARDBP, ALS10, TDP-43, TAR DNA binding protein",10.1093/nar/gky830
 TIA1,TIA1,iCLIP,Wang et al. 2010,"TIA1 Cytotoxic Granule Associated RNA Binding Protein, Nucleolysin, P40-TIA-1, WDM",10.1371/journal.pbio.1000530
 TIAL1,TIAL1,iCLIP,Wang et al. 2010,"TIAL1, TCBP, TIAR, TIA1 cytotoxic granule-associated RNA binding protein-like 1, TIA1 cytotoxic granule associated RNA binding protein like 1",10.1371/journal.pbio.1000530
 ZC3H7B,ZC3H7B,PAR-CLIP,Baltz et al. 2012,"ZC3H7B, RoXaN, zinc finger CCCH-type containing 7B, ROXAN1",10.1016/j.molcel.2012.05.021

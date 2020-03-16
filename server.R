@@ -2,6 +2,7 @@ library(shiny)
 library(shinyjs)
 library(DT)
 library(DBI)
+library(ggplot2)
 
 source("theme.R")
 source("files.R")
@@ -14,6 +15,21 @@ createJob <- function() {
   
   jobid <- as.numeric(dbGetQuery(db, "SELECT last_insert_rowid()"))
   token <- paste0(jobid, paste0(sample(c(letters, 0:9), 32), collapse=""))
+  query <- sqlInterpolate(db, "UPDATE jobs SET token = ?token WHERE id = ?id ;", token=token, id=jobid)
+  dbExecute(db, query)
+  
+  dbDisconnect(db)
+  token
+}
+
+createMultiJob <- function() {
+  db <- dbConnect(RSQLite::SQLite(), SQLITE_PATH)
+  
+  query <- sqlInterpolate(db, "INSERT INTO jobs (token, status) VALUES ('', ?status)", status=JOB_STATUS_ACTIVE)
+  dbExecute(db, query)
+  
+  jobid <- as.numeric(dbGetQuery(db, "SELECT last_insert_rowid()"))
+  token <- paste0(jobid, paste0(sample(c(letters, 0:9), 32), "_Multi", collapse=""))
   query <- sqlInterpolate(db, "UPDATE jobs SET token = ?token WHERE id = ?id ;", token=token, id=jobid)
   dbExecute(db, query)
   
@@ -111,10 +127,72 @@ makePredictionProfilePlot <- function(x, plot_difference) {
   }
 }
 
+makeMultiPredictionProfilePlot <- function(x, plot_difference) {
+  if(is.null(x[["variant_sequence"]])) {
+    weights <- unlist(x$weights)
+    seq <- strsplit(toupper(x$sequence), "")[[1]]
+    tbl <- data.frame(pos=seq_along(weights), weight=weights)
+    
+    ggplot(tbl, aes(pos, weight)) +
+      geom_line() +
+      scale_x_continuous(breaks=seq(1, length(weights)), labels=seq) +
+      mytheme() +
+      theme(
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size=11)
+      ) + labs(y="DeepCLIP score")
+  } else {
+    weights1 <- unlist(x$weights)
+    weights2 <- unlist(x$variant_weights)
+    
+    seq1 <- strsplit(toupper(x$sequence), "")[[1]]
+    seq2 <- strsplit(toupper(x$variant_sequence), "")[[1]]
+    
+    if(plot_difference) {
+      weights2 <- weights2 - weights1
+      tbl <- data.frame(
+        pos = seq_along(seq2),
+        weight = weights2,
+        group = factor(rep("difference", length(seq2)))
+      )
+    } else {
+      tbl <- data.frame(
+        pos = c(seq_along(seq1), seq_along(seq2)),
+        weight = c(weights1, weights2),
+        group = factor(c(rep("reference", length(seq1)), rep("variant", length(seq2))), levels=c("reference","variant"))
+      )
+    }
+    
+    xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
+    
+    p <- ggplot(tbl, aes(pos, weight))
+    if(plot_difference) p <- p + geom_hline(yintercept=0, color="dodgerblue")
+    p +
+      geom_line(aes(color=group), size=0.8) +
+      scale_x_continuous(breaks=seq(1, max(tbl$pos)), labels=xlabels) +
+      scale_color_manual(values=c("black", "red")) +
+      mytheme() +
+      theme(
+        legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size=11)
+      ) + labs(y="DeepCLIP score")
+  }
+}
+
 shinyServer(function(input, output, session) {
   currentPredictions <- reactiveVal()
+  currentMultiPredictions <- reactiveVal()
   
   autoInvalidate <- reactiveTimer(10000)
+  
+  jobMulti <- reactive({
+    query <- parseQueryString(session$clientData$url_search)
+    req(query[["jobmulti"]])
+    as.character(query[["jobmulti"]])
+  })
+  output$jobMulti <- reactive(jobMulti())
+  outputOptions(output, "jobMulti", suspendWhenHidden=FALSE)
   
   jobID <- reactive({
     query <- parseQueryString(session$clientData$url_search)
@@ -137,6 +215,13 @@ shinyServer(function(input, output, session) {
     return(TRUE)
   })
   outputOptions(output, "hasPredictions", suspendWhenHidden=FALSE)
+  
+  output$hasMultiPredictions <- reactive({
+    req(currentMultiPredictions())
+    return(TRUE)
+  })
+  outputOptions(output, "hasMultiPredictions", suspendWhenHidden=FALSE)
+  output$read_multi_selected_models <- renderPrint(input$input_multi_selected_models)
   
   output$summaryText <- renderUI({
     params <- jsonlite::read_json(getParamsPath(jobID()))
@@ -253,7 +338,7 @@ shinyServer(function(input, output, session) {
       theme(
         axis.title = element_blank(),
         axis.text.y = element_blank(),
-        strip.text.y = element_text(angle=180, size=12)
+        strip.text.y.left = element_text(angle=0, size=12)
       )
   }
   
@@ -307,7 +392,17 @@ shinyServer(function(input, output, session) {
     makePredictionProfilePlot(x, input$profilePlotDifference)
   }
   
+  currentMultiPredictionProfilePlot <- function() {
+    validate(need(input$predictionMultiTable_rows_selected, "Select a row in the table below to show the binding profile."))
+    rowid <- req(input$predictionMultiTable_rows_selected)
+    preds <- req(currentMultiPredictions())
+    x <- preds[[rowid]]
+    makeMultiPredictionProfilePlot(x, input$profileMultiPlotDifference)
+  }
+  
   output$predictionProfilePlot <- renderPlot(res=100, currentPredictionProfilePlot())
+  
+  output$predictionMultiProfilePlot <- renderPlot(res=100, currentMultiPredictionProfilePlot())
   
   output$downloadAllPredictionProfilePlots <- downloadHandler(
     filename = function() { sprintf("%s_profiles.zip", jobID()) },
@@ -338,6 +433,39 @@ shinyServer(function(input, output, session) {
     contentType = "application/json",
     content = function(file) {
       preds <- req(currentPredictions())
+      jsonlite::write_json(preds, file, auto_unbox=TRUE)
+    }
+  )
+  
+  output$downloadAllMultiPredictionProfilePlots <- downloadHandler(
+    filename = function() { sprintf("%s_profiles.zip", paste(unlist(strsplit(jobMulti(), ",")), collapse="_")) },
+    contentType = "application/zip",
+    content = function(file) {
+      preds <- req(currentMultiPredictions())
+      withProgress(message="Generating profile plots", min=0, max=length(preds), value=0, {
+        outfiles <- sapply(seq_along(preds), function(i) {
+          x <- preds[[i]]
+          p <- makeMultiPredictionProfilePlot(x, input$profileMultiPlotDifference)
+          if(length(x$variant_id) > 0) {
+            outfile <- tempfile(pattern=sprintf("profile_%d_%s_%s_%s_", i, x$model_id, x$id, x$variant_id), fileext=".pdf")
+          } else {
+            outfile <- tempfile(pattern=sprintf("profile_%d_%s_%s_", i, x$model_id, x$id), fileext=".pdf")
+          }
+          ggsave(outfile, p, width=10, height=3, units="in")
+          setProgress(value=i)
+          outfile
+        })
+      })
+      zip(file, outfiles, extras="-j")
+      rm(list=outfiles)
+    }
+  )
+  
+  output$downloadMultiPredictionData <- downloadHandler(
+    filename = function() { sprintf("%s_predictions.json", paste(unlist(strsplit(jobMulti(), ",")), collapse="_")) },
+    contentType = "application/json",
+    content = function(file) {
+      preds <- req(currentMultiPredictions())
       jsonlite::write_json(preds, file, auto_unbox=TRUE)
     }
   )
@@ -389,18 +517,97 @@ shinyServer(function(input, output, session) {
     )
   })
   
+  output$predictionMultiTable <- renderDT(server=FALSE, {
+    preds <- req(currentMultiPredictions())
+    tbl <- data.frame(
+      protein = sapply(preds, "[[", "protein"),
+      model_id = sapply(preds, "[[", "model_id"),
+      id = sapply(preds, "[[", "id"),
+      seq = sapply(preds, "[[", "sequence"),
+      score = if(!is.null(preds[[1]][["score"]])) sapply(preds, "[[", "score") else rep(NA, length(preds))
+    )
+    if(!is.null(preds[[1]][["variant_sequence"]])) {
+      tbl <- cbind(tbl, data.frame(
+        variant_id = sapply(preds, "[[", "variant_id"),
+        variant_seq = sapply(preds, "[[", "variant_sequence"),
+        variant_score = sapply(preds, "[[", "variant_score")
+      ))
+    }
+    datatable(
+      req(tbl),
+      rownames = FALSE,
+      selection = list(mode="single", selected=1),
+      extensions = "Buttons",
+      options = list(
+        pageLength=10,
+        select="single",
+        dom="Bfrtip",
+        buttons=list(
+          list(extend="csv", text="Download CSV", filename="predictions"),
+          list(extend="excel", text="Download Excel", filename="predictions", title="predictions")
+        )
+      )
+    )
+  })
+  
   output$pretrainedModelTable <- renderUI({
-    buttons <- sprintf('<a href="/?jobid=%s" class="btn btn-sm btn-primary"><i class="fa fa-upload"></i> Use model</a>', PRETRAINED_MODELS$id)
+    buttons <- sprintf('<a href="/?jobid=%s" class="btn btn-sm btn-primary"><i class="fa fa-tag"></i> Use model</a>', PRETRAINED_MODELS$id)
     citations <- sprintf('<a href="http://doi.org/%s" target="_blank">%s</a>', PRETRAINED_MODELS$doi, PRETRAINED_MODELS$citation)
-    cn <- c("", "protein", "method", "citation", "alias")
+    cn <- c("", "model", "protein", "method", "citation", "alias")
     tagList(
       renderDT(server=FALSE, datatable(
-        cbind(buttons, PRETRAINED_MODELS[,2:3], citations, PRETRAINED_MODELS$alias),
+        cbind(buttons, PRETRAINED_MODELS$id, PRETRAINED_MODELS[,2:3], citations, PRETRAINED_MODELS$alias),
         rownames=FALSE,
         colnames=cn,
         escape=FALSE,
         selection="none",
         options = list(
+          paging = FALSE,
+          columnDefs = list(
+            list(targets=5, orderable=FALSE),
+            list(targets=5, visible=FALSE)
+          )
+        )
+      ))
+    )
+  })
+  
+  output$pretrainedMultiModelTable <- renderUI({
+    #output.jobMulti = 1
+    #buttons <- sprintf('<a href="/?jobid=%s" class="btn btn-sm btn-primary"><i class="fa fa-tag"></i> PRETRAINED_MODELS$id</a>', PRETRAINED_MODELS$id)
+    citations <- sprintf('<a href="http://doi.org/%s" target="_blank">%s</a>', PRETRAINED_MODELS$doi, PRETRAINED_MODELS$citation)
+    cn <- c("model","protein", "method", "citation", "alias")
+    tagList(
+      renderDT(server=FALSE, datatable(
+        cbind(PRETRAINED_MODELS[,1:3], citations, PRETRAINED_MODELS$alias),
+        rownames=FALSE,
+        colnames=cn,
+        escape=FALSE,
+        selection="none",
+        options = list(
+          paging = FALSE,
+          columnDefs = list(
+            list(targets=0, orderable=FALSE),
+            list(targets=4, visible=FALSE)
+          )
+        )
+      ))
+    )
+  })
+
+  output$selectedMultiModelTable <- renderUI({
+    models <- unlist(strsplit(jobMulti(), ",")) 
+    citations <- sprintf('<a href="http://doi.org/%s" target="_blank">%s</a>', PRETRAINED_MODELS[PRETRAINED_MODELS$id %in% models,]$doi, PRETRAINED_MODELS[PRETRAINED_MODELS$id %in% models,]$citation)
+    cn <- c("model","protein", "method", "citation", "alias")
+    tagList(
+      renderDT(server=FALSE, datatable(
+        cbind(PRETRAINED_MODELS[PRETRAINED_MODELS$id %in% models,1:3], citations, PRETRAINED_MODELS[PRETRAINED_MODELS$id %in% models,]$alias),
+        rownames=FALSE,
+        colnames=cn,
+        escape=FALSE,
+        selection="none",
+        options = list(
+          dom = 't',
           paging = FALSE,
           columnDefs = list(
             list(targets=0, orderable=FALSE),
@@ -535,7 +742,7 @@ shinyServer(function(input, output, session) {
     }
     
     params <- jsonlite::read_json(getParamsPath(jobID()))
-    max_length <- if(input$predictLong) 9999999 else input$maxLength
+    max_length <- if(input$predictLong) 9999999 else params$max_length
     
     withProgress({
       setProgress(value=0.1, message="Preparing data")
@@ -589,6 +796,106 @@ shinyServer(function(input, output, session) {
       
       currentPredictions(data$predictions)
     })
+  })
+  
+  observeEvent(input$predictMultiButton, {
+    if(!isTruthy(input$predictMultiSeq) && input$predictMultiSeqText == "") {
+      alert("Please provide a sequence file or paste your sequences in the text area.")
+      return()
+    }
+    if(input$predictMultiPaired && !isTruthy(input$predictMultiSeq2) && input$predictMultiSeqText2 == "") {
+      alert("Please provide a variant sequence file or paste your variant sequences in the text area.")
+      return()
+    }
+    if(input$predictMultiPaired && input$predictMultiLong) {
+      alert("Long sequence mode cannot be used for paired sequence prediction.");
+      return()
+    }
+    
+    models <- unlist(strsplit(jobMulti(), ","))
+    max_length = 99999
+    for (i in 1:length(models)) {
+      params <- jsonlite::read_json(getParamsPath(models[i]))
+      max_length_model <- if(input$predictMultiLong) 99999 else params$max_length
+      if (max_length_model < max_length) {max_length = max_length_model}
+
+    }
+
+    withProgress({
+      setProgress(value=0.1, message="Preparing data")
+      
+      seqfile1 <- tempfile(fileext=".fa")
+      seqfile2 <- tempfile(fileext=".fa")
+      if(input$predictMultiSeqText != "") {
+        write(input$predictMultiSeqText, file=seqfile1)
+        if(!checkValidFasta(seqfile1, "Sequence file", max.length=max_length)) return()
+      } else {
+        file.copy(input$predictMultiSeq$datapath, seqfile1)
+        if(!checkValidFasta(seqfile1, "Sequence text area", max.length=max_length)) return()
+      }
+      
+      if(input$predictMultiPaired) {
+        if(input$predictMultiSeqText2 != "") {
+          write(input$predictMultiSeqText2, file=seqfile2)
+          if(!checkValidFasta(seqfile2, "Paired sequence file", max.length=max_length)) return()
+        }
+        else if(isTruthy(input$predictMultiSeq2)) {
+          file.copy(input$predictMultiSeq2$datapath, seqfile2)
+          if(!checkValidFasta(seqfile2, "Paired sequence text area", max.length=max_length)) return()
+        }
+      }
+
+      setProgress(value=0.2, message="Computing predictions")
+      for (i in 1:length(models)) {
+        jobid <- models[i]
+        params <- jsonlite::read_json(getParamsPath(jobid))
+        output.path <- tempfile(fileext=".json")
+        predict_fn.path <- getPredictFunctionPath(jobid)
+      
+        args <- c(
+          paste0(CODE_PATH, "/DeepCLIP.py"),
+          "--runmode", if(input$predictMultiLong) "predict_long" else "predict",
+          "--predict_function_file", predict_fn.path,
+          "--sequences", seqfile1,
+          if(input$predictMultiPaired) c("--variant_sequences", seqfile2),
+          "--predict_output_file", output.path
+        )
+        
+        status <- system2(PYTHON_PATH, args, wait=TRUE)
+        
+        if(status != 0) {
+          alert("Prediction failed.")
+          return()
+        }
+        
+        data <- jsonlite::read_json(output.path)
+        for (j in 1:length(data$predictions)) {
+          data$predictions[[j]]$protein=params$protein
+          data$predictions[[j]]$model_id=jobid
+        }
+        if (i==1) {
+          predictions = data$predictions
+        }
+        else {
+          predictions = c(predictions, data$predictions)
+        }
+        setProgress(value=0.2 + i*(0.9 - 0.2)/length(models), message=paste0("Finished predictions for ",i," out of ",length(models)," models"))
+        
+      }
+      setProgress(value=0.9, message="Finishing up")
+      file.remove(seqfile1, seqfile2)
+      currentMultiPredictions(predictions)
+    })
+  })
+
+  observeEvent(input$selectMultiButton, {
+    if(!isTruthy(input$input_multi_selected_models)) {
+      alert("Please select at least one model in the drop-down list.")
+      return()
+    }
+    updateQueryString(paste0("/?jobmulti=",paste(input$input_multi_selected_models,collapse=",")), mode = c("replace","push"),
+                      session = getDefaultReactiveDomain())
+    session$reload()
   })
   
   observeEvent(input$useExamplePredictLink, {
