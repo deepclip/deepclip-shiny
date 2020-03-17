@@ -1,5 +1,6 @@
 [global]
 openmp=True
+floatX=float32
 
 [blas]
 ldflags=-L/usr/lib/ -lblas
