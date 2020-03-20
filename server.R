@@ -77,7 +77,7 @@ checkValidFasta <- function(path, description, max.length=Inf) {
 makePredictionProfilePlot <- function(x, plot_difference) {
   if(is.null(x[["variant_sequence"]])) {
     weights <- unlist(x$weights)
-    seq <- strsplit(toupper(x$sequence), "")[[1]]
+    seq <- strsplit(x$sequence, "")[[1]]
     tbl <- data.frame(pos=seq_along(weights), weight=weights)
     
     ggplot(tbl, aes(pos, weight)) +
@@ -92,8 +92,8 @@ makePredictionProfilePlot <- function(x, plot_difference) {
     weights1 <- unlist(x$weights)
     weights2 <- unlist(x$variant_weights)
     
-    seq1 <- strsplit(toupper(x$sequence), "")[[1]]
-    seq2 <- strsplit(toupper(x$variant_sequence), "")[[1]]
+    seq1 <- strsplit(x$sequence, "")[[1]]
+    seq2 <- strsplit(x$variant_sequence, "")[[1]]
     
     if(plot_difference) {
       weights2 <- weights2 - weights1
@@ -110,7 +110,7 @@ makePredictionProfilePlot <- function(x, plot_difference) {
       )
     }
     
-    xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
+    xlabels <- mapply(function(a, b) paste(a, ifelse(toupper(a)==toupper(b), "", b), sep="\n"), seq1, seq2)
     
     p <- ggplot(tbl, aes(pos, weight))
     if(plot_difference) p <- p + geom_hline(yintercept=0, color="dodgerblue")
@@ -130,7 +130,7 @@ makePredictionProfilePlot <- function(x, plot_difference) {
 makeMultiPredictionProfilePlot <- function(x, plot_difference) {
   if(is.null(x[["variant_sequence"]])) {
     weights <- unlist(x$weights)
-    seq <- strsplit(toupper(x$sequence), "")[[1]]
+    seq <- strsplit(x$sequence, "")[[1]]
     tbl <- data.frame(pos=seq_along(weights), weight=weights)
     
     ggplot(tbl, aes(pos, weight)) +
@@ -145,8 +145,8 @@ makeMultiPredictionProfilePlot <- function(x, plot_difference) {
     weights1 <- unlist(x$weights)
     weights2 <- unlist(x$variant_weights)
     
-    seq1 <- strsplit(toupper(x$sequence), "")[[1]]
-    seq2 <- strsplit(toupper(x$variant_sequence), "")[[1]]
+    seq1 <- strsplit(x$sequence, "")[[1]]
+    seq2 <- strsplit(x$variant_sequence, "")[[1]]
     
     if(plot_difference) {
       weights2 <- weights2 - weights1
@@ -163,7 +163,7 @@ makeMultiPredictionProfilePlot <- function(x, plot_difference) {
       )
     }
     
-    xlabels <- mapply(function(a, b) paste(a, ifelse(a==b, "", b), sep="\n"), seq1, seq2)
+    xlabels <- mapply(function(a, b) paste(a, ifelse(toupper(a)==toupper(b), "", b), sep="\n"), seq1, seq2)
     
     p <- ggplot(tbl, aes(pos, weight))
     if(plot_difference) p <- p + geom_hline(yintercept=0, color="dodgerblue")
